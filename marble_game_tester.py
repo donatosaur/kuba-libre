@@ -1,13 +1,13 @@
-# Author: Donato Quartuccia
-# Date: 6/4/2021
-# Description: Contains unit tests for KubaGame.py
+# Author:      Donato Quartuccia
+# Modified:    2021-06-11
+# Description: Contains unit tests (and one integration test) for marble_game.py
 import unittest
-from KubaGame import Square, KubaGameBoard, KubaGame, IllegalMoveException
+from marble_game import Square, GameBoard, Game, IllegalMoveException
 
 
-class TestGame(KubaGame):
+class TestGame(Game):
     """
-    Extends the KubaGame class so that the board can be directly accessed for debugging
+    Extends the Game class so that the board can be directly accessed for debugging
     """
 
     def __init__(self, player_one_info, player_two_info):
@@ -21,7 +21,7 @@ class TestGame(KubaGame):
 
     def force_move_marble(self, coordinates, direction):
         """
-        Passes the specified parameters to the KubaGameBoard's make_move method to force a marble move on the board.
+        Passes the specified parameters to the GameBoard's make_move method to force a marble move on the board.
         Used to create a specific game state for testing purposes
 
         :param tuple[int, int] coordinates: (row, column) coordinates of the marble to push
@@ -59,8 +59,8 @@ class SquareTester(unittest.TestCase):
         square = Square('R')
 
         # the empty square shouldn't contain anything, but the other should contain 'R'
-        self.assertIsNone(empty_square.get_contents())
-        self.assertEqual(square.get_contents(), 'R')
+        self.assertIsNone(empty_square.contents)
+        self.assertEqual(square.contents, 'R')
 
     def test_set_square_contents(self):
         """
@@ -70,38 +70,28 @@ class SquareTester(unittest.TestCase):
         square = Square('R')
 
         # test whether we can set new values for the empty square
-        empty_square.set_contents('W')
-        self.assertEqual(empty_square.get_contents(), 'W')
+        empty_square.contents = 'W'
+        self.assertEqual(empty_square.contents, 'W')
 
         # test whether we can set new values for the non-empty square
-        square.set_contents('B')
-        self.assertEqual(square.get_contents(), 'B')
-
-    def test_square_is_empty(self):
-        """
-        Tests whether Square.is_empty works as expected
-        """
-        # check is_empty for a square that is initially empty and one that isn't
-        empty_square = Square()
-        square = Square('R')
-        self.assertTrue(empty_square.is_empty())
-        self.assertFalse(square.is_empty())
+        square.contents = 'B'
+        self.assertEqual(square.contents, 'B')
 
 
-class KubaGameBoardTester(unittest.TestCase):
+class GameBoardTester(unittest.TestCase):
     """
-    Contains unit tests for the KubaGame.py module
+    Contains unit tests for the Game.py module
     """
 
     def setUp(self):
         """
-        Create a KubaGameBoard to be used in tests
+        Create a GameBoard to be used in tests
         """
-        self._board = KubaGameBoard()
+        self._board = GameBoard()
 
     def test_generate_all_row_and_column_combinations(self):
         """
-        Tests whether KubaGameBoard.generate_all_row_and_column_combinations correctly generates every
+        Tests whether GameBoard.generate_all_row_and_column_combinations correctly generates every
         possible row & column index pair
         """
         # generate all the combinations
@@ -134,10 +124,10 @@ class KubaGameBoardTester(unittest.TestCase):
         red_marble = (3, 3)
         empty = (1, 2)
 
-        self.assertEqual(self._board.get_contents_from_position(white_marble), 'W')
-        self.assertEqual(self._board.get_contents_from_position(black_marble), 'B')
-        self.assertEqual(self._board.get_contents_from_position(red_marble), 'R')
-        self.assertIsNone(self._board.get_contents_from_position(empty))
+        self.assertEqual(self._board.get_contents_at_position(white_marble), 'W')
+        self.assertEqual(self._board.get_contents_at_position(black_marble), 'B')
+        self.assertEqual(self._board.get_contents_at_position(red_marble), 'R')
+        self.assertIsNone(self._board.get_contents_at_position(empty))
 
     def test_get_marble_count(self):
         """
@@ -186,7 +176,7 @@ class KubaGameBoardTester(unittest.TestCase):
             square_1 = grid_1[row_index][column_index]
             square_2 = grid_2[row_index][column_index]
             # contents of the squares should be the same
-            self.assertEqual(square_1.get_contents(), square_2.get_contents())
+            self.assertEqual(square_1.contents, square_2.contents)
             # but they should be totally different objects
             self.assertIsNot(square_1, square_2)
 
@@ -222,7 +212,7 @@ class KubaGameBoardTester(unittest.TestCase):
         try:
             # make these calls a little more readable
             direction = 'L'
-            get_contents = self._board.get_contents_from_position
+            get_contents = self._board.get_contents_at_position
             get_marble_count = self._board.get_marble_count
             move = self._board.move_marble
 
@@ -284,7 +274,7 @@ class KubaGameBoardTester(unittest.TestCase):
         self.assertEqual(self._board.simulate_move((1, 1), 'L'), 'W')
         # the original state of the board shouldn't change
         self.assertTupleEqual(self._board.get_marble_count(), (8, 8, 13))
-        self.assertEqual(self._board.get_contents_from_position((1, 1)), 'W')
+        self.assertEqual(self._board.get_contents_at_position((1, 1)), 'W')
 
     def test_move_marble_right(self):
         """
@@ -293,7 +283,7 @@ class KubaGameBoardTester(unittest.TestCase):
         try:
             # make these calls a little more readable
             direction = 'R'
-            get_contents = self._board.get_contents_from_position
+            get_contents = self._board.get_contents_at_position
             get_marble_count = self._board.get_marble_count
             move = self._board.move_marble
 
@@ -354,7 +344,7 @@ class KubaGameBoardTester(unittest.TestCase):
         self.assertEqual(self._board.simulate_move((1, 5), 'R'), 'B')
         # the original state of the board shouldn't change
         self.assertTupleEqual(self._board.get_marble_count(), (8, 8, 13))
-        self.assertEqual(self._board.get_contents_from_position((1, 5)), 'B')
+        self.assertEqual(self._board.get_contents_at_position((1, 5)), 'B')
 
     def test_move_marble_forward(self):
         """
@@ -363,7 +353,7 @@ class KubaGameBoardTester(unittest.TestCase):
         try:
             # make these calls a little more readable
             direction = 'F'
-            get_contents = self._board.get_contents_from_position
+            get_contents = self._board.get_contents_at_position
             get_marble_count = self._board.get_marble_count
             move = self._board.move_marble
 
@@ -425,7 +415,7 @@ class KubaGameBoardTester(unittest.TestCase):
         self.assertEqual(self._board.simulate_move((1, 1), 'F'), 'W')
         # the original state of the board shouldn't change
         self.assertTupleEqual(self._board.get_marble_count(), (8, 8, 13))
-        self.assertEqual(self._board.get_contents_from_position((1, 1)), 'W')
+        self.assertEqual(self._board.get_contents_at_position((1, 1)), 'W')
 
     def test_move_marble_backward(self):
         """
@@ -434,7 +424,7 @@ class KubaGameBoardTester(unittest.TestCase):
         try:
             # make these calls a little more readable
             direction = 'B'
-            get_contents = self._board.get_contents_from_position
+            get_contents = self._board.get_contents_at_position
             get_marble_count = self._board.get_marble_count
             move = self._board.move_marble
 
@@ -497,7 +487,7 @@ class KubaGameBoardTester(unittest.TestCase):
         self.assertEqual(self._board.simulate_move((5, 1), 'B'), 'B')
         # the original state of the board shouldn't change
         self.assertTupleEqual(self._board.get_marble_count(), (8, 8, 13))
-        self.assertEqual(self._board.get_contents_from_position((5, 1)), 'B')
+        self.assertEqual(self._board.get_contents_at_position((5, 1)), 'B')
 
     def test_simulate_returns_previous(self):
         """
@@ -511,14 +501,14 @@ class KubaGameBoardTester(unittest.TestCase):
         self.assertEqual(self._board.simulate_move((2, 1), 'F'), "previous")
 
 
-class KubaGameTester(unittest.TestCase):
+class GameTester(unittest.TestCase):
     """
-    Contains unit tests for the KubaGame.py module
+    Contains unit tests for the Game.py module
     """
 
     def setUp(self):
         """
-        Create a KubaGameBoard and a KubaGame to be used in tests
+        Create a GameBoard and a Game to be used in tests
         """
         self._player_b = "Player B"
         self._player_w = "Player W"
@@ -557,7 +547,7 @@ class KubaGameTester(unittest.TestCase):
 
     def test_game_is_initialized_correctly(self):
         """
-        Tests whether the initial state of the KubaGame is as expected
+        Tests whether the initial state of the Game is as expected
         """
         # there should initially be no current turn and no winner
         self.assertIsNone(self._test_game.get_winner())
@@ -576,8 +566,8 @@ class KubaGameTester(unittest.TestCase):
         player_b_info = (self._player_b, 'B')
         player_w_info = (self._player_w, 'W')
 
-        game_1 = KubaGame(player_b_info, player_w_info)
-        game_2 = KubaGame(player_b_info, player_w_info)
+        game_1 = Game(player_b_info, player_w_info)
+        game_2 = Game(player_b_info, player_w_info)
 
         self.assertTrue(game_2.make_move(self._player_w, (0, 0), 'B'))
         self.assertTrue(game_1.make_move(self._player_b, (0, 5), 'B'))

@@ -1,8 +1,23 @@
-# Author: Donato Quartuccia
-# Date: 6/4/2021
-# Description: Contains class definitions representing a game of Kuba. This module specifically implements the
-#              backend logic for Kuba (including logic for the game board, win tracking, player and score tracking,
-#              turn tracking, movement rule compliance, and actual movement along the board).
+# Copyright 2021 Donato Quartuccia
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# All trademarks and copyrights are the property of their respective owners.
+#
+# Modified:    2021-06-11
+# Description: Contains backend logic for the game board, win tracking, score and turn tracking, movement rule
+#              compliance, and actual movement along the board. The Game class is intended to provide an interface
+#              for this backend logic.
 
 
 class IllegalMoveException(Exception):
@@ -15,81 +30,57 @@ class IllegalMoveException(Exception):
 
 class Square:
     """
-    Represents a square on a game board. Squares are mutable containers that can hold any type of object.
-    Useful for mimicking mutable pointer behavior for otherwise immutable objects.
-
-    The Square class is self-contained and only responsible for holding other objects.
+    A mutable container that may hold any type of object. Represents a square on the game board.
     """
 
     def __init__(self, contents=None):
         """
         Creates a square with the specified contents (or an empty square if no arguments are passed)
 
-        :param any contents: the object contained in the Square
+        :param Any contents: the object contained in the Square
         """
         self._contents = contents
 
-    def get_contents(self):
+    @property
+    def contents(self):
         """
-        Returns the Square's contents
+        The object contained in the Square.
         """
         return self._contents
 
-    def set_contents(self, value):
-        """
-        Replaces the Square's contents with the specified value
-
-        :param any value: the object that is to be contained in the Square
-        """
+    @contents.setter
+    def contents(self, value):
         self._contents = value
 
-    def is_empty(self):
-        """
-        Returns True if the Square is empty. Otherwise, returns False.
-        """
-        return self._contents is None
-
     def __str__(self):
-        """
-        Returns the object's contents, formatted as a string
-        """
-        return str(self.get_contents())
+        return str(self._contents)
 
     def __repr__(self):
-        """
-        Returns a string representation of the Square object for debugging
-        """
-        return "Square(id=" + str(hex(id(self))) + " _contents=" + str(self.get_contents()) + ")"
+        return f"Square(id={hex(id(self))} _contents= {self._contents})"
 
 
-class KubaGameBoard:
+class GameBoard:
     """
-    Represents a 7 x 7 game board with marbles, composed of Squares.
+    A 7 x 7 game board containing marbles.
 
-    Each of the 49 Squares in the KubaGameBoard is held on a 7 x 7 grid and intended to be indexed using (row, column)
-    notation. These Squares are used to hold marbles ('R' for red marbles, 'W' for white marbles, 'B' for black
-    marbles, None for empty).
+    A GameBoard is composed of 49 Squares held on a 7 x 7 grid and intended to be indexed using (row, column) notation.
+    These Squares are either empty (in which case their contents are None) or contain a marble ('R' for red marble,
+    'W' for white marbles, 'B' for black marbles).
 
-    The KubaGameBoard object has the following responsibilities: Containing and counting marbles. Determining whether
-    a particular row or column is full and whether a given coordinate pair exists. Moving marbles along a row or column
-    (without checking whether the move follows any rules). Simulating a proposed move (including whether it would revert
-    the board to its previous state). Communicating the contents of a square.
-
-    The KubaGameBoard requires "communicating with" Squares. This is a result of how the game board logic for moving is
-    marbles is implemented. Marbles need to be moved along two axes but are only contained along rows, so they need to
-    be copied by reference if moved along a column. This requires copying mutable object references, and strings are
-    not mutable.
+    The GameBoard is responsible for: containing and counting marbles; determining whether a given coordinate pair
+    exists; moving marbles along a row or column; simulating a proposed move (including whether it would revert
+    the board back to its previous state; and communicating the contents of each square on the grid to the caller.
     """
 
     def __init__(self):
         """
-        Creates a game board for Kuba in its initial state:
+        Creates the game board in its initial state:
           - 8 white marbles in the top-left and bottom-right corner regions ('W' marbles)
           - 8 black marbles in the bottom-left and top-right corner regions ('B' marbles)
           - 13 red marbles in the center-most region, radiating outward in a plus-pattern ('R' marbles)
-          - 20 empty spaces
+          - 20 empty squares
         """
-        # initialize a game board with cells that can be indexed using [row_number][column_number]
+        # initialize a game board so that it can be indexed by [row_number][column_number]
         self._grid = [
             [Square('W'), Square('W'), Square(   ), Square(   ), Square(   ), Square('B'), Square('B')],
             [Square('W'), Square('W'), Square(   ), Square('R'), Square(   ), Square('B'), Square('B')],
@@ -100,65 +91,52 @@ class KubaGameBoard:
             [Square('B'), Square('B'), Square(   ), Square(   ), Square(   ), Square('W'), Square('W')],
         ]
 
-        self._previous_state = None  # will hold a copy of the previous grid
-        self._max_index = len(self._grid) - 1  # the board is a square, so rows and columns have the same length
+        self._previous_state = None  # to hold a copy of the previous grid
+        self._max_index = len(self._grid) - 1  # the board is a square
         self._direction_to_step = {'F': -1, 'B': 1, 'L': -1, 'R': 1}  # maps directions to a step (for indexing)
 
     def generate_all_row_and_column_combinations(self):
         """
-        Generates all the possible (row, column) combinations for the KubaGameBoard
+        Generates all the possible (row, column) combinations for the GameBoard
         """
         for row_index in range(self._max_index + 1):
             for column_index in range(self._max_index + 1):
                 yield row_index, column_index
 
-    def get_contents_from_position(self, coordinates):
+    def get_contents_at_position(self, coordinates):
         """
         Returns the contents of the square at the specified coordinates
 
         :param tuple[int, int] coordinates: (row, column) coordinates of the square
         """
-        # get the row and column indices
         row_index, column_index = coordinates
-
-        return self._grid[row_index][column_index].get_contents()
+        return self._grid[row_index][column_index].contents
 
     def get_marble_count(self):
         """
-        Returns the number of White, Black and Red marbles (in that order) currently present on the KubaGameBoard
+        Returns a tuple containing the number of white, black and red marbles (in that order) on the game board
         """
         # initialize marble counters
-        white_marble_count = 0
-        black_marble_count = 0
-        red_marble_count = 0
+        white_marble_count, black_marble_count, red_marble_count = 0, 0, 0
 
         # count the marbles (we can ignore any empty cells)
         for coordinates in self.generate_all_row_and_column_combinations():
-            # get the cell contents
-            cell_contents = self.get_contents_from_position(coordinates)
-
-            # categorize and count the cell contents
-            if cell_contents == 'W':
+            contents = self.get_contents_at_position(coordinates)
+            if contents == 'W':
                 white_marble_count += 1
-            elif cell_contents == 'B':
+            elif contents == 'B':
                 black_marble_count += 1
-            elif cell_contents == 'R':
+            elif contents == 'R':
                 red_marble_count += 1
-            else:
-                # the only other possibility is that the cell is empty
-                continue
-
         return white_marble_count, black_marble_count, red_marble_count
 
     def is_valid_square(self, coordinates):
         """
-        Returns True if the specified coordinates refer to a square on the KubaGameBoard. Otherwise, returns False.
+        Returns True if the specified coordinates refer to a square on the GameBoard. Otherwise, returns False.
 
         :param tuple[int, int] coordinates: (row, column) coordinates to check for
         """
-        # get the row and column indices
         row_index, column_index = coordinates
-
         # the cell is valid if both of its row and column values are within the game board
         return 0 <= row_index <= self._max_index and 0 <= column_index <= self._max_index
 
@@ -168,23 +146,32 @@ class KubaGameBoard:
 
         :param tuple[int, int] coordinates: (row, column) coordinates of the square to be checked
         """
-        return self.get_contents_from_position(coordinates) is None
+        return self.get_contents_at_position(coordinates) is None
 
     def deepcopy_grid(self):
         """
-        Returns a **deepcopy** of the KubaGameBoard's grid
+        Returns a deepcopy of the GameBoard's grid
         """
         grid_copy = []
         for row in self._grid:
-            row_copy = [Square(square.get_contents()) for square in row]
+            row_copy = [Square(square.contents) for square in row]
             grid_copy.append(row_copy)
-
-        # # these assertions should never end up being triggered, but they're here to catch any bugs early
-        # assert row is not row_copy, "The squares were not deep copied correctly"
-        # for index in range(len(row_copy)):
-        #     assert row[index] is not row_copy[index], "The squares were not deep copied correctly"
-
         return grid_copy
+
+    def _validate_move(self, coordinates, direction):
+        """
+        Validates whether the proposed move is possible
+
+        :param tuple[int, int] coordinates: (row, column) coordinates of marble being pushed
+        :param str direction: the direction to push the marble ('L', 'R', 'F' or 'B')
+        :raises IllegalMoveException: if the move is not defined
+        """
+        # validate the coordinates
+        if not self.is_valid_square(coordinates) or self.is_empty_position(coordinates):
+            raise IllegalMoveException
+        # validate the direction
+        if direction not in {'L', 'R', 'F', 'B'}:
+            raise IllegalMoveException
 
     def move_marble(self, coordinates, direction):
         """
@@ -195,31 +182,20 @@ class KubaGameBoard:
         :param str direction: the direction to push the marble ('L', 'R', 'F' or 'B')
         :returns: the contents of the Square pushed off the game board as a result of the move
                   ('W', 'B' or 'R if a marble has been pushed off the game board, otherwise None)
-        :raises IllegalMoveException: if the direction is undefined,
-                                      if the specified square doesn't exist, or
-                                      if the specified square is empty
+        :raises IllegalMoveException: if the direction is undefined, the square doesn't exist, or the square is empty
         """
-        # before continuing, make sure we have at least have a marble, a valid square and a defined direction
-        if not self.is_valid_square(coordinates) or self.is_empty_position(coordinates):
-            raise IllegalMoveException
-        if direction not in {'L', 'R', 'F', 'B'}:
-            raise IllegalMoveException
-
-        # save the board state (so we can later check whether a proposed move might cause an infinitely long game)
+        # validate the move and save the board state (so we can check for ko rule compliance later)
+        self._validate_move(coordinates, direction)
         self._previous_state = self.deepcopy_grid()
 
-        # determine the appropriate step for traversing the axis the marble is being pushed along
-        step = self._direction_to_step[direction]
-
         # push the marble along the appropriate axis
+        step = self._direction_to_step[direction]
         if direction in {'F', 'B'}:
-            # we're pushing along a column, so fix the column index and vary the row index to get the Squares in the
-            # column, and set the initial Square's index to be that of its original position in the row
+            # fix column index, vary row index; the Square's initial index along column is its original row position
             index_along_axis, fixed_index = coordinates
             axis = [self._grid[row_index][fixed_index] for row_index in range(self._max_index + 1)]
         else:
-            # otherwise we're pushing along a row, so fix the row index and get the squares along the row
-            # the square's position on the axis is its original position along the column
+            # fix row index, vary column index; the Square's initial index along row is its original column position
             fixed_index, index_along_axis = coordinates
             axis = [self._grid[fixed_index][column_index] for column_index in range(self._max_index + 1)]
 
@@ -240,31 +216,20 @@ class KubaGameBoard:
         :returns: "previous" if the proposed move would return the board to its previous state, otherwise the
                   the contents of the Square that would be pushed off the board as a result of the move (or
                   None if nothing would be pushed off)
-        :raises IllegalMoveException: if the direction is undefined,
-                                      if the specified square doesn't exist, or
-                                      if the specified square is empty
+        :raises IllegalMoveException: if the direction is undefined, the square doesn't exist, or the square is empty
         """
-        # before continuing, make sure we have at least have a marble, a valid square and a defined direction
-        if not self.is_valid_square(coordinates) or self.is_empty_position(coordinates):
-            raise IllegalMoveException
-        if direction not in {'L', 'R', 'F', 'B'}:
-            raise IllegalMoveException
+        # validate the move
+        self._validate_move(coordinates, direction)
 
-        # since we're just simulating the move and not actually making it, make the move on a deepcopy of the grid
+        # push the marble along the appropriate axis, but on a deepcopy of the grid since we're just simulating it
         grid_copy = self.deepcopy_grid()
-
-        # determine the appropriate step for traversing the axis the marble is being pushed along
         step = self._direction_to_step[direction]
-
-        # push the marble along the appropriate axis
         if direction in {'F', 'B'}:
-            # we're pushing along a column, so fix the column index and vary the row index to get the Squares in the
-            # column, and set the initial Square's index to be that of its original position in the row
+            # fix column index, vary row index; the Square's initial index along column is its original row position
             index_along_axis, fixed_index = coordinates
             axis = [grid_copy[row_index][fixed_index] for row_index in range(self._max_index + 1)]
         else:
-            # otherwise we're pushing along a row, so fix the row index and get the squares along the row
-            # the square's position on the axis is its original position along the column
+            # fix row index, vary column index; the Square's initial index along row is its original column position
             fixed_index, index_along_axis = coordinates
             axis = [grid_copy[fixed_index][column_index] for column_index in range(self._max_index + 1)]
 
@@ -278,8 +243,8 @@ class KubaGameBoard:
         else:
             for row_index, column_index in self.generate_all_row_and_column_combinations():
                 # get the contents of the position that would result from the simulated move and its previous contents
-                simulated_state = grid_copy[row_index][column_index].get_contents()
-                previous_state = self._previous_state[row_index][column_index].get_contents()
+                simulated_state = grid_copy[row_index][column_index].contents
+                previous_state = self._previous_state[row_index][column_index].contents
 
                 if simulated_state != previous_state:
                     # at least one square differs, so the previous state isn't recreated
@@ -290,9 +255,11 @@ class KubaGameBoard:
 
     def _push_marble(self, axis, current_position, step, previous_square=None):
         """
-        Pushes a marble along the specified axis (row or column). Mutates the Squares present along the axis to
-        reflect the post-push contents. When first called, current_position should be the index of the Square that
-        contains the marble being pushed, and previous_square should be None.
+        Helper method for move_marble and simulate_move. Pushes a marble along the specific axis, mutating the
+        Squares along it to reflect their post-push contents.
+
+        When first called, current_position should be the index of the Square that contains the marble being pushed,
+        and previous_square should be None.
 
         The move should be checked for legality **before** calling this method. Assumes:
           - the Square at the specified coordinates exists
@@ -308,61 +275,50 @@ class KubaGameBoard:
         :returns: the contents of the Square that pushed off the game board as a result of the proposed move
                   (or None if nothing is pushed off)
         """
-        # the first "previous" value will always be empty (when the marble at the first position is moved, nothing will
-        # occupy its original space) - this avoids the pitfalls of using a mutable default argument
         if previous_square is None:
-            previous_square = Square()
+            previous_square = Square()  # when the first marble is moved, its original space becomes empty
 
         # base case: we've moved off the edge of the game board
         if current_position < 0 or current_position > len(axis) - 1:
-            return previous_square.get_contents()
+            return previous_square.contents
+        # recursive step: move the contents of the previous square into the current one
+        else:
+            previous_contents = previous_square.contents
+            current_contents = axis[current_position].contents
+            # check whether we're pushing a marble into an empty square
+            reached_empty = current_contents is None
+            # swap the contents to move the marble into the current square
+            axis[current_position].contents = previous_contents
+            previous_square.contents = current_contents
 
-        # in any other case, the contents of the previous square will be moved into the current one, so get them
-        previous_contents = previous_square.get_contents()
-        current_contents = axis[current_position].get_contents()
-
-        # base case: we've reached an empty square
-        if axis[current_position].is_empty():
-            # drop the previous square's contents into the empty square
-            axis[current_position].set_contents(previous_contents)
-            previous_square.set_contents(current_contents)
-            # nothing was pushed off the board
-            return None
-
-        # otherwise, at each step of the recursion, we need to move the contents of the previous square into the
-        # current one and continue doing so until we reach either an empty square or push something off the board
-        axis[current_position].set_contents(previous_contents)
-        previous_square.set_contents(current_contents)
-        return self._push_marble(axis, current_position + step, step, previous_square)
+            # if we pushed a marble into an empty square, we're done (and no marble was pushed off)
+            return None if reached_empty else self._push_marble(axis, current_position + step, step, previous_square)
 
     def __str__(self):
-        """
-        Returns the game board in an easy-to-read format for printing or string operations
-        """
         result = []
         for row in self._grid:
             for square in row:
-                if square.is_empty():
+                if square.contents is None:  # the square is empty
                     result.append("  ")
                 else:
-                    result.append(square.get_contents() + ' ')
+                    result.append(str(square) + ' ')
             result.append('\n')
         return ''.join(result)
 
     def __repr__(self):
-        """
-        Returns a string representation of the KubaGameBoard object for debugging
-        """
         # build a string representation of the grids
-        previous_state_representation = [repr(row) for row in self._previous_state]
+        if self._previous_state is None:
+            previous_state_representation = "None"
+        else:
+            previous_state_representation = [repr(row) for row in self._previous_state]
         grid_representation = [repr(row) for row in self._grid]
 
         # replace "None" with the unicode 'NUL' representation to align output
         null_char = '\u2400'
 
-        # build a string representation of the KubaGameBoard
+        # build a string representation of the GameBoard
         representation = [
-            "KubaGame(",
+            "Game(",
             "_max_index= " + repr(self._max_index),
             "_direction_to_step= " + repr(self._direction_to_step),
             "_previous_state=[\n" + ",\n".join(previous_state_representation).replace("None", null_char) + "]",
@@ -372,44 +328,54 @@ class KubaGameBoard:
         return '\n'.join(representation)
 
 
-class KubaGame:
+class Game:
     """
-    Represents a game of Kuba with two players and a game board. Composed of a KubaGameBoard.
+    Represents a game of Kuba with two players and a game board. Composed of a GameBoard.
 
-    The KubaGame object has the following responsibilities: Tracking player turns. Tracking player scores. Determining
-    whether a move does or does not follow the rules. Making (legal) moves. Determining win conditions (including
-    whether a player is out of moves).
-
-    The KubaGame requires "communicating with" the KubaGameBoard it contains. This is because the KubaGameBoard is
-    responsible for implementing the game board and handling movement logic.
+    The Game is responsible for: tracking player turns; tracking player scores; determining whether a move follow
+    the game rules; making (legal) moves; and determining win conditions.
     """
 
     def __init__(self, player_one_info, player_two_info):
         """
-        Creates a KubaGame with the specified players. The players' names and marble colors must be unique.
+        Creates a Game with the specified players. The players' names and marble colors must be unique.
 
         Player marbles may only have the following values:
-          - 'W' for white
           - 'B' for black
+          - 'W' for white
 
-        :param tuple[str, str] player_one_info: first player's name and marble color ('W' or 'B'), in that order
-        :param tuple[str, str] player_two_info: second player's name and marble color ('W' or 'B'), in that order
+        :param tuple[str, str] player_one_info: first player's name and marble color ('B' or 'W'), in that order
+        :param tuple[str, str] player_two_info: second player's name and marble color ('B' or 'W'), in that order
         """
-        self._current_turn = None  # will hold the current player's name
-        self._winner = None        # will hold the winning player's name
+        # validate the player info before proceeding
+        player_one_name, player_one_color = player_one_info
+        player_two_name, player_two_color = player_two_info
+        if player_one_name == player_two_name:
+            raise ValueError("The players must have unique names")
+        elif player_one_color == player_two_color:
+            raise ValueError("The players cannot have the same marble color")
+        elif player_one_color not in {'B', 'W'} or player_two_color not in {'B', 'W'}:
+            raise ValueError("The marble color must be 'B' for black or 'W' for white")
 
-        # build a dictionary to represent the player data with the following format:
-        #   ["player name"]["color"] = player's marble color ('W' or 'B')
-        #                  ["score"] = player's captured red marbles
+        self._current_turn = None  # will hold the current player's name
+        self._winner = None  # will hold the winning player's name
+        self._game_board = GameBoard()
+
+        # build a dictionary to represent the player data
         self._players = dict()
         for player_info in (player_one_info, player_two_info):
             player_name, marble_color = player_info
-            self._players[player_name] = {"color": marble_color,
-                                          "score": 0  # if this is >= 7, the player wins
-                                          }
+            self._players[player_name] = {
+                "color": marble_color,
+                "red_marbles_captured": 0,  # if this is >= 7, the player wins
+                "opponent_marbles_captured": 0,  # this doesn't affect the score
+            }
 
-        # Create an empty 7x7 game board
-        self._game_board = KubaGameBoard()
+    def get_current_turn(self):
+        """
+        Returns the name of the current player, if any
+        """
+        return self._current_turn
 
     def get_player_names(self):
         """
@@ -417,15 +383,9 @@ class KubaGame:
         """
         return set(self._players.keys())
 
-    def get_current_turn(self):
-        """
-        Returns the name of the player whose turn it is, or None if no player has yet to make a move
-        """
-        return self._current_turn
-
     def get_winner(self):
         """
-        Returns the name of the winning player, or None if no player has yet to win the game
+        Returns the name of the winning player, if any
         """
         return self._winner
 
@@ -447,7 +407,7 @@ class KubaGame:
         :param str player_name: the name of the player
         """
         try:
-            return self._players[player_name]["score"]
+            return self._players[player_name]["red_marbles_captured"]
         except KeyError:
             return None
 
@@ -461,13 +421,12 @@ class KubaGame:
         if self._game_board.is_empty_position(coordinates):
             return 'X'
         else:
-            return self._game_board.get_contents_from_position(coordinates)
+            return self._game_board.get_contents_at_position(coordinates)
 
     def get_marble_count(self):
         """
-        Returns the number of White, Black and Red marbles (in that order) currently present on the board
+        Returns a tuple containing the number of white, black and red marbles (in that order) on the game board
         """
-        # we can just just call the game board's marble count method for this
         return self._game_board.get_marble_count()
 
     def is_player_out_of_moves(self, player_name):
@@ -481,7 +440,7 @@ class KubaGame:
 
         # find the coordinates of all the player's marbles
         for coordinate in self._game_board.generate_all_row_and_column_combinations():
-            if self._game_board.get_contents_from_position(coordinate) == player_color:
+            if self._game_board.get_contents_at_position(coordinate) == player_color:
                 marble_coordinates.add(coordinate)
 
         # if the player is out of marbles, then they have no moves left
@@ -543,24 +502,18 @@ class KubaGame:
         if self._current_turn is not None and player_name != self._current_turn:
             return False
 
-        # get the coordinates of the square that comes "before" the current one
+        # get the coordinates of the square opposite the current one and determine whether it's empty or an edge
         row_index, column_index = coordinates
         if direction == 'L':
-            # we're pushing left, so the square one column to the right should be empty or an edge
-            column_index += 1
+            column_index += 1  # pushing left => square one column to the right should be empty or an edge
         elif direction == 'R':
-            # we're pushing right, so the square one column to the left should be empty or an edge
-            column_index -= 1
+            column_index -= 1  # pushing right => square one column to the left should be empty or an edge
         elif direction == 'F':
-            # we're pushing up, so the square one row below should be empty or an edge
-            row_index += 1
+            row_index += 1     # pushing up => square one row below should be empty or an edge
         else:
-            # otherwise, we're pushing down, so the square one row above should be empty or an edge
-            row_index -= 1
+            row_index -= 1     # pushing down => square one row above should be empty or an edge
         new_coordinates = (row_index, column_index)
-
-        # determine whether the "previous" square is an edge or is empty (if the original square exists but the previous
-        # one doesn't, then the original square must occupy an edge) - if neither is true, the move is invalid
+        # if the original square exists but the previous one doesn't, then the original square must occupy an edge
         square_is_not_along_edge = self._game_board.is_valid_square(new_coordinates)
         if square_is_not_along_edge and self.get_marble(new_coordinates) != 'X':
             return False
@@ -607,10 +560,12 @@ class KubaGame:
         # otherwise, make the move
         marble_pushed_off = self._game_board.move_marble(coordinates, direction)
 
-        # update the score
-        if marble_pushed_off == 'R':
-            # the current player captured a red marble (and they get to go again)
-            self._players[player_name]["score"] += 1
+        # update the marble/score trackers
+        if marble_pushed_off is not None:
+            if marble_pushed_off == 'R':
+                self._players[player_name]["red_marbles_captured"] += 1
+            else:
+                self._players[player_name]["opponent_marbles_captured"] += 1
 
         # check for win conditions (player captured 7 marbles, opponent has no marbles left)
         if self.get_captured(player_name) >= 7:
@@ -626,7 +581,7 @@ class KubaGame:
         # get the opponent's name
         names = self.get_player_names()
         names.remove(player_name)
-        # assert len(names) == 1  # this should never go off, here to catch bugs early
+        # assert len(names) == 1  # debugging
         opponent = names.pop()  # there should only be one element in the set so we can just use pop()
 
         # swap the current player
@@ -640,19 +595,12 @@ class KubaGame:
         return True
 
     def __str__(self):
-        """
-        Returns the game board, formatted as a string (for printing or casting to a string)
-        """
-        # since we're just printing the game board, we can return the board's string method
         return str(self._game_board)
 
     def __repr__(self):
-        """
-        Returns a string representation of the KubaGame for debugging
-        """
-        # build a string representation of the KubaGame
+        # build a string representation of the Game
         representation = [
-            "KubaGame(",
+            "Game(",
             "_players=" + repr(self._players),
             "_current_turn=" + repr(self._current_turn),
             "_winner=" + repr(self._winner),
@@ -661,12 +609,3 @@ class KubaGame:
         ]
 
         return '\n'.join(representation)
-
-
-# if __name__ == "__main__":
-#     # Test code
-#     p1, p2 = ("p1", 'B'), ("p2", 'W')
-#     game = KubaGame(p1, p2)
-#     print(game)
-#     assert game.make_move("p2", (6, 5), 'F')
-#     print(repr(game))
