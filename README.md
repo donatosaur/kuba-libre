@@ -20,7 +20,7 @@ A virtual representation of a board game based on the rules of Kuba
 
 #### Example code use:
 ```
-game = KubaGame(('PlayerA', 'W'), ('PlayerB', 'B'))
+game = MarbleGame(('PlayerA', 'W'), ('PlayerB', 'B'))
 game.get_marble_count() #returns (8,8,13)
 game.get_captured('PlayerA')
 game.get_winner() #returns None
