@@ -52,6 +52,13 @@ class GameBoardJSONTests(unittest.TestCase):
         self.assertEqual("WW    BWW RRBB  RR    RRRRR   RRR  BB R WWBB   WW", board.grid_as_str)
         self.assertEqual("WW    BWW R BB  RRR   RRRRR   RRR  BB R WWBB   WW", board.previous_grid_as_str)
 
+    def test_encode_then_decode(self):
+        """Tests whether GameBoard can be encoded then decoded to the same state"""
+        encoded_json = json.dumps(self._board, cls=GameBoardEncoder)
+        decoded_board = json.loads(encoded_json, cls=GameBoardDecoder)
+        for var in vars(self._board):
+            self.assertEqual(getattr(self._board, var), getattr(decoded_board, var))
+
 
 class MarbleGameJSONTests(unittest.TestCase):
     """Contains unit tests for MarbleGame JSON encoding & decoding"""
@@ -66,25 +73,23 @@ class MarbleGameJSONTests(unittest.TestCase):
                 "board": json.dumps({
                     "grid": "WW   BBWW R BB  RRR   RRRRR   RRR  BB R WWBB   WW",
                     "previous_state": " " * 49,
-                },
-                    sort_keys=True,
-                ),
-                "players": {
-                    "Player B ID":
-                        {
-                            "color": 'B',
+                }),
+                "players": json.dumps({
+                    "Player B ID": {
                             "name": "Player B",
+                            "color": 'B',
                             "red_marbles_captured": 0,
                             "opponent_marbles_captured": 0,
                         },
                     "Player W ID":
                         {
-                            "color": 'W',
                             "name": "Player W",
+                            "color": 'W',
                             "red_marbles_captured": 0,
-                            "opponent_marbles_captured": 0
-                        }
+                            "opponent_marbles_captured": 0,
+                        },
                 },
+                ),
                 "current_turn": None,
                 "winner": None,
             },
@@ -95,25 +100,23 @@ class MarbleGameJSONTests(unittest.TestCase):
                 "board": json.dumps({
                     "grid":           " W   BBWW R BBW RRR   RRRRR   RRR  BB R WWBB   WW",
                     "previous_state": "WW   BBWW R BB  RRR   RRRRR   RRR  BB R WWBB   WW",
-                },
-                    sort_keys=True,
-                ),
-                "players": {
-                    "Player B ID":
-                        {
-                            "color": 'B',
+                }),
+                "players": json.dumps({
+                    "Player B ID": {
                             "name": "Player B",
+                            "color": 'B',
                             "red_marbles_captured": 0,
                             "opponent_marbles_captured": 0,
                         },
                     "Player W ID":
                         {
-                            "color": 'W',
                             "name": "Player W",
+                            "color": 'W',
                             "red_marbles_captured": 0,
-                            "opponent_marbles_captured": 0
-                        }
+                            "opponent_marbles_captured": 0,
+                        },
                 },
+                ),
                 "current_turn": "Player B ID",
                 "winner": None,
             },
@@ -145,23 +148,37 @@ class MarbleGameJSONTests(unittest.TestCase):
         players_expected = {
             "Player B ID":
                 {
-                    "color": 'B',
                     "name": "Player B",
-                    "red_marbles_captured": 0,
+                    "color": 'B',
                     "opponent_marbles_captured": 0,
+                    "red_marbles_captured": 0,
                 },
 
             "Player W ID":
                 {
-                    "color": 'W',
                     "name": "Player W",
+                    "color": 'W',
+                    "opponent_marbles_captured": 0,
                     "red_marbles_captured": 0,
-                    "opponent_marbles_captured": 0
                 }
         }
         self.assertDictEqual(players_expected, game._players)
         self.assertEqual("Player B ID", game.current_turn)
         self.assertIsNone(game.winner)
+
+    def test_encode_then_decode(self):
+        """Tests whether MarbleGame can be encoded then decoded to the same state"""
+        encoded_json = json.dumps(self._test_game, cls=MarbleGameEncoder)
+        decoded_game = json.loads(encoded_json, cls=MarbleGameDecoder)
+        for var in vars(self._test_game):
+            if var == "_game_board":
+                # GameBoard doesn't have __eq__ defined, so we need to compare its properties individually
+                original_board = self._test_game._game_board
+                decoded_board = decoded_game._game_board
+                for board_var in vars(self._test_game._game_board):
+                    self.assertEqual(getattr(original_board, board_var), getattr(decoded_board, board_var))
+            else:
+                self.assertEqual(getattr(self._test_game, var), getattr(decoded_game, var))
 
 
 if __name__ == '__main__':

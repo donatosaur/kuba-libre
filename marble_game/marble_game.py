@@ -276,7 +276,7 @@ class MarbleGame:
 
     def make_move(self, player_id: str, coordinates: tuple[int, int], direction: str) -> bool:
         """
-        Attempts move a marble in the specified cell.
+        Attempts to move a marble in the specified cell.
 
         Directions must be one of the following:
           - 'L' for left
