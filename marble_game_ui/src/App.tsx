@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 // page and component imports
 import logo from './logo.svg';
-import HomePage from './pages/HomePage'
+// import HomePage from './pages/HomePage'
 
 // import pages and router
 
@@ -15,7 +15,7 @@ function App() {
       <Router>
         <header className='App-header'>
           <Route path="/" exact>
-            <HomePage/>
+            {/*<HomePage/>*/}
 
           </Route>
           <img src={logo} className="App-logo" alt="logo" />
