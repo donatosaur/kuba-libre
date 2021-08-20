@@ -1,4 +1,3 @@
-# Author:      Donato Quartuccia
 # Modified:    2021-08-16
 # Description: Contains unit tests for MarbleGame
 import unittest

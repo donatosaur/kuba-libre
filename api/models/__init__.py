@@ -15,4 +15,4 @@
 # All trademarks and copyrights are the property of their respective owners.
 #
 
-from .pydantic_object_id import PydanticObjectID
+from pydantic_object_id import PydanticObjectID

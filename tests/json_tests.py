@@ -1,4 +1,3 @@
-# Author:      Donato Quartuccia
 # Modified:    2021-08-18
 # Description: Contains unit tests for JSON Encoding & Decoding of package objects
 import unittest
