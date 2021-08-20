@@ -14,3 +14,8 @@
 #
 # All trademarks and copyrights are the property of their respective owners.
 #
+from player_controller import player_router
+from game_controller import game_router
+
+# define module-level constants
+ID_REGEX = "^[0-9a-f]{24}$"

@@ -32,8 +32,7 @@ async def create(username: str, name: str) -> Awaitable:
     :param name: the player's name
     :return: an awaitable resolving to the id of the inserted document
     """
-    player = await collection.insert_one({"username": username, "name": name})
-    return player.inserted_id
+    return await collection.insert_one({"username": username, "name": name})
 
 
 async def find(player_id: str) -> Awaitable:
