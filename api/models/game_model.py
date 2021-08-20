@@ -1,26 +1,16 @@
-# Copyright 2021 Donato Quartuccia
-#
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
-#
-# All trademarks and copyrights are the property of their respective owners.
-#
 # Modified:    2021-08-20
 # Description: Implements a model for game info
 #
 import json
-from pydantic import BaseModel, Field
 from marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
+from typing import Awaitable
+from pydantic import BaseModel, Field
+from pymongo import ReturnDocument
 from . import PydanticObjectID
+from ..main import app
+
+# get the game collection
+collection = app.db["games"]
 
 
 class Game(BaseModel):
@@ -55,12 +45,52 @@ class Game(BaseModel):
             return json.loads(s, object_hook=hook)
 
 
-async def find_all_games():
-    pass
+async def create(player_one_data: tuple[str, str, str], player_two_data: tuple[str, str, str]) -> Awaitable:
+    """
+    Creates a new entry in the games database.
 
-async def find_game():
-    pass
+    :param player_one_data: a tuple containing the first player's id, name and marble color (in that order)
+    :param player_two_data: a tuple containing the second player's id, name and marble color (in that order)
+    :return: an awaitable resolving to the id of the inserted document
+    """
+    player_ids = (player_one_data[0], player_two_data[0])
+    game_state = MarbleGame(player_one_data, player_two_data)
+    game = await collection.insert_one({"player_ids": player_ids, "game_state": game_state})
+    return game.inserted_id
 
-async def update_game():
-    pass
 
+async def find(game_id: str) -> Awaitable:
+    """
+    Retrieves the specified game document.
+
+    :param game_id: the object id of the game
+    :return: an awaitable resolving to the matching document, or None if one is not found
+    """
+    return await collection.find_one({"_id": game_id})
+
+
+async def update_game_state(game_id: str, new_game_state: MarbleGame) -> Awaitable:
+    """
+    Updates the specified game's state.
+
+    :param game_id: the object id of the game
+    :param new_game_state: the new game state
+    :return: an awaitable resolving to the updated document, or None if one is not found
+    """
+    updated_game = await collection.find_one_and_update(
+        {"_id": game_id},
+        {"$set": {"game_state": new_game_state}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return updated_game
+
+
+async def delete(game_id: str) -> Awaitable:
+    """
+    Deletes the specified game from the database.
+
+    :param game_id: the object id of the game
+    :return: an awaitable resolving to the number of deleted documents
+    """
+    deleted = await collection.delete_one({"_id": game_id})
+    return deleted.deleted_count
