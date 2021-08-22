@@ -45,7 +45,7 @@ class Game(BaseModel):
             return json.loads(s, object_hook=hook)
 
 
-async def create(player_one_data: tuple[str, str, str], player_two_data: tuple[str, str, str]) -> Awaitable:
+async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, str]) -> Awaitable:
     """
     Creates a new entry in the games database.
 

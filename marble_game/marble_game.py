@@ -14,7 +14,7 @@
 #
 # All trademarks and copyrights are the property of their respective owners.
 #
-# Modified:    2021-08-17
+# Modified:    2021-08-22
 # Description: Contains backend logic for the marble game and provides an interface for the game. Responsible for:
 #              turn tracking, score tracking, making (valid) moves and determining win conditions.
 #
@@ -27,8 +27,8 @@ class MarbleGame:
     """Represents a game instance, with two players and a board."""
 
     def __init__(self,
-                 player_one_data: tuple[str, str, str] = None,
-                 player_two_data: tuple[str, str, str] = None,
+                 player_one_data: tuple[str, str] = None,
+                 player_two_data: tuple[str, str] = None,
                  **kwargs):
         """
         Creates a MarbleGame in the state defined by kwargs if present, otherwise in its initial state (with no winner,
@@ -39,8 +39,8 @@ class MarbleGame:
               other parameters are ignored
             - if the game is being created in its initial state, both player_one_data and player_two_data are required
 
-        :param player_one_data: a tuple containing the first player's id, name and marble color (in that order)
-        :param player_two_data: a tuple containing the second player's id, name and marble color (in that order)
+        :param player_one_data: a tuple containing the first player's id and marble color (in that order)
+        :param player_two_data: a tuple containing the second player's id and marble color (in that order)
         :keyword board: the GameBoard to be restored
         :keyword players: player dictionary mapped by player_id -> {name, color, red captured, opponent captured}
         :keyword current_turn: id of player whose turn it is
@@ -52,7 +52,7 @@ class MarbleGame:
             if len(player_ids) != 2:
                 raise ValueError("kwarg players missing 1 or more player id")
 
-            required = {"name", "color", "red_marbles_captured", "opponent_marbles_captured"}
+            required = {"color", "red_marbles_captured", "opponent_marbles_captured"}
             if not all(required.issubset(kwargs["players"][player_id].keys()) for player_id in player_ids):
                 raise ValueError("kwarg players[player_id] missing required keys")
 
@@ -75,8 +75,8 @@ class MarbleGame:
 
         elif player_one_data is not None and player_two_data is not None:
             # unpack the data; this will throw ValueError if there isn't enough data
-            p1_id, p1_name, p1_color = player_one_data
-            p2_id, p2_name, p2_color = player_two_data
+            p1_id, p1_color = player_one_data
+            p2_id, p2_color = player_two_data
 
             # validate the ids and colors
             if p1_id == p2_id:
@@ -91,13 +91,11 @@ class MarbleGame:
             # the data is valid, so create the player dictionary and initialize the board
             self._players = {
                 p1_id: {
-                    "name": p1_name,
                     "color": p1_color,
                     "red_marbles_captured": 0,       # if this is >= 7, the player wins
                     "opponent_marbles_captured": 0,  # this doesn't affect the score
                 },
                 p2_id: {
-                    "name": p2_name,
                     "color": p2_color,
                     "red_marbles_captured": 0,       # if this is >= 7, the player wins
                     "opponent_marbles_captured": 0,  # this doesn't affect the score

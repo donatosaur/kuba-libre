@@ -1,4 +1,4 @@
-# Modified:    2021-08-18
+# Modified:    2021-08-22
 # Description: Contains unit tests for JSON Encoding & Decoding of package objects
 import unittest
 import json
@@ -66,7 +66,7 @@ class MarbleGameJSONTests(unittest.TestCase):
         """Create a MarbleGame and JSON strings to be used in tests"""
         self._player_b = "Player B ID"
         self._player_w = "Player W ID"
-        self._test_game = MarbleGame((self._player_b, "Player B", 'B'), (self._player_w, "Player W", 'W'))
+        self._test_game = MarbleGame((self._player_b, 'B'), (self._player_w, 'W'))
         self.json_string_init = json.dumps(
             {
                 "board": json.dumps({
@@ -75,14 +75,12 @@ class MarbleGameJSONTests(unittest.TestCase):
                 }),
                 "players": json.dumps({
                     "Player B ID": {
-                            "name": "Player B",
                             "color": 'B',
                             "red_marbles_captured": 0,
                             "opponent_marbles_captured": 0,
                         },
                     "Player W ID":
                         {
-                            "name": "Player W",
                             "color": 'W',
                             "red_marbles_captured": 0,
                             "opponent_marbles_captured": 0,
@@ -102,14 +100,12 @@ class MarbleGameJSONTests(unittest.TestCase):
                 }),
                 "players": json.dumps({
                     "Player B ID": {
-                            "name": "Player B",
                             "color": 'B',
                             "red_marbles_captured": 0,
                             "opponent_marbles_captured": 0,
                         },
                     "Player W ID":
                         {
-                            "name": "Player W",
                             "color": 'W',
                             "red_marbles_captured": 0,
                             "opponent_marbles_captured": 0,
@@ -147,7 +143,6 @@ class MarbleGameJSONTests(unittest.TestCase):
         players_expected = {
             "Player B ID":
                 {
-                    "name": "Player B",
                     "color": 'B',
                     "opponent_marbles_captured": 0,
                     "red_marbles_captured": 0,
@@ -155,7 +150,6 @@ class MarbleGameJSONTests(unittest.TestCase):
 
             "Player W ID":
                 {
-                    "name": "Player W",
                     "color": 'W',
                     "opponent_marbles_captured": 0,
                     "red_marbles_captured": 0,
