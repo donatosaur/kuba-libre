@@ -5,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 from config import settings
-from .controllers import player_router, game_router, move_router
+from .controllers import player_router, game_router
 
 
 # create the app
@@ -22,7 +22,6 @@ if __name__ == '__main__':
 
     # attach attach API endpoints
     app.include_router(game_router, tags=["game"], prefix="/game")
-    app.include_router(move_router, tags=["move"], prefix="/move")
     app.include_router(player_router, tags=["player"], prefix="/player")
 
     # open an asynchronous database connection on startup

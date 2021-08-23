@@ -1,9 +1,8 @@
-# Modified:    2021-08-20
+# Modified:    2021-08-23
 # Description: Implements a model for game info
 #
 import json
 from marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
-from typing import Awaitable
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
 from . import PydanticObjectID
@@ -15,13 +14,42 @@ collection = app.db["games"]
 
 class Game(BaseModel):
     """Defines the Game schema"""
-    id: str = Field(default_factory=PydanticObjectID, alias="_id")
-    player_ids: tuple[str, str]
-    game_state: MarbleGame
+    id: str = Field(default_factory=PydanticObjectID, alias="_id", description="24-digit hex string ObjectID")
+    player_ids: tuple[str, str] = Field(..., description="The players' IDs")
+    game_state: MarbleGame = Field(..., description="A representation of the game state")
 
     class Config:
         # allow id to be populated by id or _id
         allow_population_by_field_name = True
+
+        # define JSON metadata for FastAPI's doc generator
+        schema_extra = {
+            "example": {
+                "id": "b0ab39b98aa9e0db3404c117",
+                "player_ids": ["c838c7eb1f84086bf3b08e60", "9967854891700e3f20654a0f"],
+                "game_state": {
+                    "board": {
+                        "grid": " W   BBWW R BBW RRR   RRRRR   RRR  BB R WWBB   WW",
+                        "previous_state": "WW   BBWW R BB  RRR   RRRRR   RRR  BB R WWBB   WW",
+                    },
+                    "players": {
+                        "c838c7eb1f84086bf3b08e60": {
+                            "color": 'B',
+                            "red_marbles_captured": 0,
+                            "opponent_marbles_captured": 0,
+                        },
+                        "9967854891700e3f20654a0f":
+                            {
+                                "color": 'W',
+                                "red_marbles_captured": 0,
+                                "opponent_marbles_captured": 0,
+                            },
+                    },
+                    "current_turn": "c838c7eb1f84086bf3b08e60",
+                    "winner": None,
+                },
+            }
+        }
 
         # define json encoders & decoders for the schema
         @staticmethod
@@ -40,12 +68,13 @@ class Game(BaseModel):
                 return Game(
                     id=d["id"],
                     player_ids=tuple(json.loads(d["player_ids"])),
-                    game_state=json.loads(d[""], cls=MarbleGameDecoder),
+                    game_state=json.loads(d["game_state"], cls=MarbleGameDecoder),
                 )
             return json.loads(s, object_hook=hook)
 
 
-async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, str]) -> Awaitable:
+# ---- CREATE ----
+async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, str]) -> Game:
     """
     Creates a new entry in the games database.
 
@@ -59,7 +88,8 @@ async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, s
     return game.inserted_id
 
 
-async def find(game_id: str) -> Awaitable:
+# ---- RETRIEVE ----
+async def find(game_id: str) -> Game:
     """
     Retrieves the specified game document.
 
@@ -69,7 +99,8 @@ async def find(game_id: str) -> Awaitable:
     return await collection.find_one({"_id": game_id})
 
 
-async def update_game_state(game_id: str, new_game_state: MarbleGame) -> Awaitable:
+# ---- UPDATE ----
+async def update_game_state(game_id: str, new_game_state: MarbleGame) -> Game:
     """
     Updates the specified game's state.
 
@@ -77,6 +108,7 @@ async def update_game_state(game_id: str, new_game_state: MarbleGame) -> Awaitab
     :param new_game_state: the new game state
     :return: an awaitable resolving to the updated document, or None if one is not found
     """
+    new_game_state = json.dumps(new_game_state, cls=MarbleGameEncoder)
     updated_game = await collection.find_one_and_update(
         {"_id": game_id},
         {"$set": {"game_state": new_game_state}},
@@ -85,7 +117,8 @@ async def update_game_state(game_id: str, new_game_state: MarbleGame) -> Awaitab
     return updated_game
 
 
-async def delete(game_id: str) -> Awaitable:
+# ---- DELETE ----
+async def delete(game_id: str) -> int:
     """
     Deletes the specified game from the database.
 

@@ -35,7 +35,7 @@ async def retrieve_player(
 
 
 @player_router.patch("/{player_id}", response_description="Update a player's name", response_model=player_model.Player)
-async def update_player(
+async def update_name(
         player_id: str = Path(..., regex=ID_REGEX, description=PLAYER_ID_DESC),
         name: str = Body(..., description="A new name for the player"),
 ) -> JSONResponse:
@@ -54,7 +54,7 @@ async def update_player(
     response_description="Adds the specified game to the player's current games",
     response_model=player_model.Player,
 )
-async def update_player(
+async def add_game(
         player_id: str = Field(..., regex=ID_REGEX, description=PLAYER_ID_DESC),
         game_id: str = Field(..., regex=ID_REGEX, description=GAME_ID_DESC),
 ) -> JSONResponse:
@@ -69,7 +69,7 @@ async def update_player(
     response_description="Moves the specified game from the player's current games and adds to their completed games",
     response_model=player_model.Player,
 )
-async def update_player(
+async def complete_game(
         player_id: str = Field(..., regex=ID_REGEX, description=PLAYER_ID_DESC),
         game_id: str = Field(..., regex=ID_REGEX, description=GAME_ID_DESC),
 ) -> JSONResponse:
