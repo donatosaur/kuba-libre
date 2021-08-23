@@ -16,6 +16,10 @@
 #
 from player_controller import player_router
 from game_controller import game_router
+from move_controller import move_router
 
 # define module-level constants
-ID_REGEX = "^[0-9a-f]{24}$"
+ID_REGEX = r"^[0-9a-f]{24}$"
+
+PLAYER_ID_DESC = "The player's ID"
+GAME_ID_DESC = "The game's ID"

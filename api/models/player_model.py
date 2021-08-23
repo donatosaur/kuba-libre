@@ -1,7 +1,6 @@
-# Modified:    2021-08-20
+# Modified:    2021-08-23
 # Description: Implements a model for player info
 #
-from typing import Awaitable
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
 from . import PydanticObjectID
@@ -13,18 +12,30 @@ collection = app.db["players"]
 
 class Player(BaseModel):
     """Defines the Player schema"""
-    id: str = Field(default_factory=PydanticObjectID, alias="_id")
+    id: str = Field(default_factory=PydanticObjectID, alias="_id", description="24-digit hex string ObjectID")
     username: str
     name: str
-    current_games: list = []
-    completed_games: list = []
+    current_games: list = Field(default_factory=lambda: [])
+    completed_games: list = Field(default_factory=lambda: [])
 
     class Config:
         # allow id to be populated by id or _id
         allow_population_by_field_name = True
 
+        # define JSON metadata for FastAPI's doc generator
+        schema_extra = {
+            "example": {
+                "id": "c838c7eb1f84086bf3b08e60",
+                "username": "player_username",
+                "name": "Player Name",
+                "current_games": ["4dea5825ed8666d1f4114277", "6c3f5ca0bb6b5a79257e2c17"],
+                "completed_games": ["cd82357045798bc3d1e844e2"],
+            }
+        }
 
-async def create(username: str, name: str) -> Awaitable:
+
+# ---- CREATE ----
+async def create(username: str, name: str) -> Player:
     """
     Creates a new entry in the player database.
 
@@ -35,7 +46,8 @@ async def create(username: str, name: str) -> Awaitable:
     return await collection.insert_one({"username": username, "name": name})
 
 
-async def find(player_id: str) -> Awaitable:
+# ---- RETRIEVE ----
+async def find(player_id: str) -> Player:
     """
     Retrieves the specified player document.
 
@@ -45,7 +57,8 @@ async def find(player_id: str) -> Awaitable:
     return await collection.find_one({"_id": player_id})
 
 
-async def update_name(player_id: str, new_name: str) -> Awaitable:
+# ---- UPDATE ----
+async def update_name(player_id: str, new_name: str) -> Player:
     """
     Updates the specified player's name.
 
@@ -61,7 +74,7 @@ async def update_name(player_id: str, new_name: str) -> Awaitable:
     return updated_player
 
 
-async def add_current_game(player_id: str, game_id: str) -> Awaitable:
+async def add_current_game(player_id: str, game_id: str) -> Player:
     """
     Updates the specified player's current games by adding a game to it.
 
@@ -77,7 +90,7 @@ async def add_current_game(player_id: str, game_id: str) -> Awaitable:
     return updated_player
 
 
-async def remove_current_game(player_id: str, game_id: str) -> Awaitable:
+async def remove_current_game(player_id: str, game_id: str) -> Player:
     """
     Updates the specified player's current games by removing a game from it.
 
@@ -93,7 +106,7 @@ async def remove_current_game(player_id: str, game_id: str) -> Awaitable:
     return updated_player
 
 
-async def add_completed_game(player_id: str, game_id: str) -> Awaitable:
+async def add_completed_game(player_id: str, game_id: str) -> Player:
     """
     Updates the specified player's completed games by adding a game to it.
 
@@ -109,7 +122,7 @@ async def add_completed_game(player_id: str, game_id: str) -> Awaitable:
     return updated_player
 
 
-async def remove_completed_game(player_id: str, game_id: str) -> Awaitable:
+async def remove_completed_game(player_id: str, game_id: str) -> Player:
     """
     Updates the specified player's current games by removing a game from it.
 
@@ -125,7 +138,7 @@ async def remove_completed_game(player_id: str, game_id: str) -> Awaitable:
     return updated_player
 
 
-async def move_current_game_to_completed_games(player_id: str, game_id: str) -> Awaitable:
+async def move_current_game_to_completed(player_id: str, game_id: str) -> Player:
     """
     Updates the specified player's current_games ***and*** completed_games by removing the specified game from
     current_games and adding it to completed_games
@@ -142,7 +155,8 @@ async def move_current_game_to_completed_games(player_id: str, game_id: str) -> 
     return updated_player
 
 
-async def delete(player_id: str) -> Awaitable:
+# ---- DELETE ----
+async def delete(player_id: str) -> int:
     """
     Deletes the specified player from the database.
 

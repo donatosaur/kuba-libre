@@ -13,6 +13,8 @@
 #    limitations under the License.
 #
 # All trademarks and copyrights are the property of their respective owners.
-#
 
-from pydantic_object_id import PydanticObjectID
+# make pydantic models easily available for other modules
+from .pydantic_object_id import PydanticObjectID
+from .game_model import Game
+from .player_model import Player
