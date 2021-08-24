@@ -34,7 +34,7 @@ class GameInput(BaseModel):
         }
 
 
-@router.post("/", response_description="Create a new game", response_model=game_model.Game)
+@router.post("/", response_description="Create a new game", response_model=game_model.GameModel)
 async def create_game(game_input: GameInput) -> JSONResponse:
     """Handles /game create requests."""
     # ignore case
@@ -57,15 +57,15 @@ async def create_game(game_input: GameInput) -> JSONResponse:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=INVALID_PARAMS_MESSAGE)
 
     # create the game
-    if (created := game_model.create((p1_id, p1_color), (p2_id, p2_color))) is None:
+    if (created := await game_model.create((p1_id, p1_color), (p2_id, p2_color))) is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error")
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=created)
 
 
-@router.get("/{game_id}", response_description="Get a game", response_model=game_model.Game)
+@router.get("/{game_id}", response_description="Get a game", response_model=game_model.GameModel)
 async def retrieve_game(game_id: str = Path(..., regex=ID_REGEX, description=GAME_ID_DESC)) -> JSONResponse:
     """Handles /game/{game_id} retrieve requests."""
-    if (retrieved := game_model.find(game_id)) is None:
+    if (retrieved := await game_model.find(game_id)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Game with id={game_id} not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content=retrieved)
 

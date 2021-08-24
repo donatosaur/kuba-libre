@@ -1,8 +1,8 @@
-# Modified:    2021-08-23
+# Modified:    2021-08-24
 # Description: Implements a model for move info
 #
 from pydantic import BaseModel, Field
-from . import ID_REGEX, PLAYER_ID_DESC, OBJ_ID_FIELD_DESC
+from . import ID_REGEX, DIRECTION_REGEX, PLAYER_ID_DESC, OBJ_ID_FIELD_DESC
 
 
 class MoveInput(BaseModel):
@@ -10,7 +10,7 @@ class MoveInput(BaseModel):
     player_id: str = Field(..., regex=ID_REGEX, description=f"{PLAYER_ID_DESC}: {OBJ_ID_FIELD_DESC}")
     row_coord: int = Field(..., ge=0, le=6)
     col_coord: int = Field(..., ge=0, le=6)
-    direction: str = Field(..., regex=r"^[FfBbLlRr]$", description="The direction of the move: F, B, R or L")
+    direction: str = Field(..., regex=DIRECTION_REGEX, description="The direction of the move: F, B, R or L")
 
     class Config:
         # define JSON metadata for FastAPI's doc generator

@@ -1,23 +1,64 @@
-# Modified:    2021-08-23
+# Modified:    2021-08-25
 # Description: Implements a model for game info
 #
 import json
+from typing import Optional
 from marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
+from api.db import db
 from .pydantic_object_id import PydanticObjectID
 from . import OBJ_ID_FIELD_DESC
-from ..main import app
-
-# get the game collection
-collection = app.db["games"]
 
 
-class Game(BaseModel):
+class MarbleGameModel(BaseModel):
+    """Defines the MarbleGame schema"""
+    board: dict = Field(..., description="A representation of the board state")
+    players: dict = Field(..., description="A representation of the players' states")
+    current_turn: Optional[str] = Field(..., description="The current player's ID, if any")
+    winner: Optional[str] = Field(..., description="The winning player's ID, if any")
+
+    class Config:
+        # define json encoders & decoders for the schema
+        @staticmethod
+        def json_dumps(o: MarbleGame):
+            return json.dumps(o, cls=MarbleGameEncoder)
+
+        @staticmethod
+        def json_loads(s: str):
+            return json.loads(s, cls=MarbleGameDecoder)
+
+        # define JSON metadata for FastAPI's doc generator
+        schema_extra = {
+            "example": {
+                "board": {
+                    "grid": " W   BBWW R BBW RRR   RRRRR   RRR  BB R WWBB   WW",
+                    "previous_state": "WW   BBWW R BB  RRR   RRRRR   RRR  BB R WWBB   WW",
+                },
+                "players": {
+                    "c838c7eb1f84086bf3b08e60": {
+                        "color": 'B',
+                        "red_marbles_captured": 0,
+                        "opponent_marbles_captured": 0,
+                    },
+                    "9967854891700e3f20654a0f":
+                        {
+                            "color": 'W',
+                            "red_marbles_captured": 0,
+                            "opponent_marbles_captured": 0,
+                        },
+                },
+                "current_turn": "c838c7eb1f84086bf3b08e60",
+                "winner": None,
+            }
+        }
+
+
+class GameModel(BaseModel):
     """Defines the Game schema"""
     id: str = Field(default_factory=PydanticObjectID, alias="_id", description=OBJ_ID_FIELD_DESC)
     player_ids: tuple[str, str] = Field(..., description="The players' IDs")
-    game_state: MarbleGame = Field(..., description="A representation of the game state")
+    game_state: MarbleGameModel = Field(..., description="A representation of the game state")
 
     class Config:
         # allow id to be populated by id or _id
@@ -52,30 +93,9 @@ class Game(BaseModel):
             }
         }
 
-        # define json encoders & decoders for the schema
-        @staticmethod
-        def json_dumps(o: Game):
-            if not isinstance(o, Game):
-                raise TypeError(f"Unsupported type {o.__class__}")
-            return json.dumps({
-                "id": o.id,
-                "player_ids": o.player_ids,
-                "game_state": json.dumps(o.game_state, cls=MarbleGameEncoder),
-            })
-
-        @staticmethod
-        def json_loads(s: str):
-            def hook(d: dict):
-                return Game(
-                    id=d["id"],
-                    player_ids=tuple(json.loads(d["player_ids"])),
-                    game_state=json.loads(d["game_state"], cls=MarbleGameDecoder),
-                )
-            return json.loads(s, object_hook=hook)
-
 
 # ---- CREATE ----
-async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, str]) -> Game:
+async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, str]) -> dict:
     """
     Creates a new entry in the games database.
 
@@ -83,6 +103,7 @@ async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, s
     :param player_two_data: a tuple containing the second player's id, name and marble color (in that order)
     :return: an awaitable resolving to the id of the inserted document
     """
+    collection = await db.get_game_collection()
     player_ids = (player_one_data[0], player_two_data[0])
     game_state = MarbleGame(player_one_data, player_two_data)
     game = await collection.insert_one({"player_ids": player_ids, "game_state": game_state})
@@ -90,18 +111,23 @@ async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, s
 
 
 # ---- RETRIEVE ----
-async def find(game_id: str) -> Game:
+async def find(game_id: str, collection=Depends(get_game_collection)) -> GameModel:
     """
     Retrieves the specified game document.
 
     :param game_id: the object id of the game
     :return: an awaitable resolving to the matching document, or None if one is not found
     """
+    collection = await db.get_game_collection()
     return await collection.find_one({"_id": game_id})
 
 
 # ---- UPDATE ----
-async def update_game_state(game_id: str, new_game_state: MarbleGame) -> Game:
+async def update_game_state(
+        game_id: str,
+        new_game_state: MarbleGameModel,
+        collection=Depends(get_game_collection)
+) -> GameModel:
     """
     Updates the specified game's state.
 
@@ -109,6 +135,7 @@ async def update_game_state(game_id: str, new_game_state: MarbleGame) -> Game:
     :param new_game_state: the new game state
     :return: an awaitable resolving to the updated document, or None if one is not found
     """
+    collection = await db.get_game_collection()
     new_game_state = json.dumps(new_game_state, cls=MarbleGameEncoder)
     updated_game = await collection.find_one_and_update(
         {"_id": game_id},
@@ -126,5 +153,6 @@ async def delete(game_id: str) -> int:
     :param game_id: the object id of the game
     :return: an awaitable resolving to the number of deleted documents
     """
+    collection = await db.get_game_collection()
     deleted = await collection.delete_one({"_id": game_id})
     return deleted.deleted_count
