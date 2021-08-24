@@ -2,12 +2,12 @@
 # Description: Implements a model for move info
 #
 from pydantic import BaseModel, Field
-from ..controllers import ID_REGEX
+from . import ID_REGEX, PLAYER_ID_DESC, OBJ_ID_FIELD_DESC
 
 
 class MoveInput(BaseModel):
     """Defines a schema for move input"""
-    player_id: str = Field(..., regex=ID_REGEX, description="The player's ID")
+    player_id: str = Field(..., regex=ID_REGEX, description=f"{PLAYER_ID_DESC}: {OBJ_ID_FIELD_DESC}")
     row_coord: int = Field(..., ge=0, le=6)
     col_coord: int = Field(..., ge=0, le=6)
     direction: str = Field(..., regex=r"^[FfBbLlRr]$", description="The direction of the move: F, B, R or L")

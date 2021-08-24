@@ -5,7 +5,8 @@ import json
 from marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
-from . import PydanticObjectID
+from .pydantic_object_id import PydanticObjectID
+from . import OBJ_ID_FIELD_DESC
 from ..main import app
 
 # get the game collection
@@ -14,7 +15,7 @@ collection = app.db["games"]
 
 class Game(BaseModel):
     """Defines the Game schema"""
-    id: str = Field(default_factory=PydanticObjectID, alias="_id", description="24-digit hex string ObjectID")
+    id: str = Field(default_factory=PydanticObjectID, alias="_id", description=OBJ_ID_FIELD_DESC)
     player_ids: tuple[str, str] = Field(..., description="The players' IDs")
     game_state: MarbleGame = Field(..., description="A representation of the game state")
 

@@ -6,20 +6,19 @@ from httpx import AsyncClient
 from fastapi import APIRouter, Path, HTTPException, status
 from fastapi.responses import JSONResponse
 from ..models import game_model, move_model
-from . import ID_REGEX
+from . import ID_REGEX, GAME_ID_DESC, PLAYER_ID_DESC, OBJ_ID_FIELD_DESC
 
-game_router = APIRouter()
+router = APIRouter()
 
 # define constants for descriptions and error messages
 INVALID_PARAMS_MESSAGE = "Invalid parameters: player ids must be valid and unique, colors must be 'B' or 'W' and unique"
-ID_FIELD_DESC = "24-digit hex string ObjectID"
 COLOR_FIELD_DESC = "The player's marble color: 'B' for black or 'W' for white. These must be unique to each player."
 
 
 class GameInput(BaseModel):
     """Defines the input schema for Game data"""
-    player_one_id: str = Field(..., regex=ID_REGEX, description=ID_FIELD_DESC)
-    player_two_id: str = Field(..., regex=ID_REGEX, description=ID_FIELD_DESC)
+    player_one_id: str = Field(..., regex=ID_REGEX, description=f"{PLAYER_ID_DESC}: {OBJ_ID_FIELD_DESC}")
+    player_two_id: str = Field(..., regex=ID_REGEX, description=f"{PLAYER_ID_DESC}: {OBJ_ID_FIELD_DESC}")
     player_one_color: str = Field(..., regex="[BbWw]", description=COLOR_FIELD_DESC)
     player_two_color: str = Field(..., regex="[BbWw]", description=COLOR_FIELD_DESC)
 
@@ -35,7 +34,7 @@ class GameInput(BaseModel):
         }
 
 
-@game_router.post("/", response_description="Create a new game", response_model=game_model.Game)
+@router.post("/", response_description="Create a new game", response_model=game_model.Game)
 async def create_game(game_input: GameInput) -> JSONResponse:
     """Handles /game create requests."""
     # ignore case
@@ -63,15 +62,15 @@ async def create_game(game_input: GameInput) -> JSONResponse:
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=created)
 
 
-@game_router.get("/{game_id}", response_description="Get a game", response_model=game_model.Game)
-async def retrieve_player(game_id: str = Path(..., regex=ID_REGEX, description="The game's id")) -> JSONResponse:
+@router.get("/{game_id}", response_description="Get a game", response_model=game_model.Game)
+async def retrieve_game(game_id: str = Path(..., regex=ID_REGEX, description=GAME_ID_DESC)) -> JSONResponse:
     """Handles /game/{game_id} retrieve requests."""
     if (retrieved := game_model.find(game_id)) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Game with id={game_id} not found")
     return JSONResponse(status_code=status.HTTP_200_OK, content=retrieved)
 
 
-@game_router.patch("/{game_id}/make-move", response_description="Make a move", response_model=move_model.MoveOutput)
+@router.patch("/{game_id}/make-move", response_description="Make a move", response_model=move_model.MoveOutput)
 async def make_move(game_id: str, move: move_model.MoveInput) -> JSONResponse:
     """Handles /game/{game_id}/move update requests"""
     # get the game

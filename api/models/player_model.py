@@ -3,7 +3,8 @@
 #
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
-from . import PydanticObjectID
+from .pydantic_object_id import PydanticObjectID
+from . import OBJ_ID_FIELD_DESC
 from ..main import app
 
 # get the player collection
@@ -12,11 +13,11 @@ collection = app.db["players"]
 
 class Player(BaseModel):
     """Defines the Player schema"""
-    id: str = Field(default_factory=PydanticObjectID, alias="_id", description="24-digit hex string ObjectID")
+    id: str = Field(default_factory=PydanticObjectID, alias="_id", description=OBJ_ID_FIELD_DESC)
     username: str
     name: str
-    current_games: list = Field(default_factory=lambda: [])
-    completed_games: list = Field(default_factory=lambda: [])
+    current_games: list = Field(default_factory=lambda: [], description="A list of Game IDs denoting ongoing games")
+    completed_games: list = Field(default_factory=lambda: [], description="A list of Game IDs denoting completed games")
 
     class Config:
         # allow id to be populated by id or _id

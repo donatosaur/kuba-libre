@@ -7,10 +7,10 @@ from fastapi.responses import JSONResponse
 from ..models import player_model
 from . import ID_REGEX, PLAYER_ID_DESC, GAME_ID_DESC
 
-player_router = APIRouter()
+router = APIRouter()
 
 
-@player_router.post("/", response_description="Create a new player", response_model=player_model.Player)
+@router.post("/", response_description="Create a new player", response_model=player_model.Player)
 async def create_player(
         body: Body(..., example={"name": "Player Name", "username": "player_username"}),
 ) -> JSONResponse:
@@ -24,7 +24,7 @@ async def create_player(
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=created)
 
 
-@player_router.get("/{player_id}", response_description="Get a player", response_model=player_model.Player)
+@router.get("/{player_id}", response_description="Get a player", response_model=player_model.Player)
 async def retrieve_player(
         player_id: str = Path(..., regex=ID_REGEX, description=PLAYER_ID_DESC),
 ) -> JSONResponse:
@@ -34,7 +34,7 @@ async def retrieve_player(
     return JSONResponse(status_code=status.HTTP_200_OK, content=retrieved)
 
 
-@player_router.patch("/{player_id}", response_description="Update a player's name", response_model=player_model.Player)
+@router.patch("/{player_id}", response_description="Update a player's name", response_model=player_model.Player)
 async def update_name(
         player_id: str = Path(..., regex=ID_REGEX, description=PLAYER_ID_DESC),
         name: str = Body(..., description="A new name for the player"),
@@ -49,7 +49,7 @@ async def update_name(
     return JSONResponse(status_code=status.HTTP_200_OK, content=updated)
 
 
-@player_router.patch(
+@router.patch(
     "/{player_id}/current-games/{game_id}/add",
     response_description="Adds the specified game to the player's current games",
     response_model=player_model.Player,
@@ -64,7 +64,7 @@ async def add_game(
     return JSONResponse(status_code=status.HTTP_200_OK, content=updated)
 
 
-@player_router.patch(
+@router.patch(
     "/{player_id}/current-games/{game_id}/complete",
     response_description="Moves the specified game from the player's current games and adds to their completed games",
     response_model=player_model.Player,
