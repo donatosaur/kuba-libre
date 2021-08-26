@@ -3,7 +3,7 @@
 #
 import json
 from typing import Optional
-from marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
+from marble_game import MarbleGame, MarbleGameEncoder
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
 from api.db import db
@@ -19,15 +19,6 @@ class MarbleGameModel(BaseModel):
     winner: Optional[str] = Field(..., description="The winning player's ID, if any")
 
     class Config:
-        # define json encoders & decoders for the schema
-        @staticmethod
-        def json_dumps(o: MarbleGame):
-            return json.dumps(o, cls=MarbleGameEncoder)
-
-        @staticmethod
-        def json_loads(s: str):
-            return json.loads(s, cls=MarbleGameDecoder)
-
         # define JSON metadata for FastAPI's doc generator
         schema_extra = {
             "example": {
@@ -57,7 +48,7 @@ class MarbleGameModel(BaseModel):
 class GameModel(BaseModel):
     """Defines the Game schema"""
     id: str = Field(default_factory=PydanticObjectID, alias="_id", description=OBJ_ID_FIELD_DESC)
-    player_ids: tuple[str, str] = Field(..., description="The players' IDs")
+    player_ids: list[str, str] = Field(..., description="The players' IDs")
     game_state: MarbleGameModel = Field(..., description="A representation of the game state")
 
     class Config:
@@ -105,9 +96,12 @@ async def create(player_one_data: tuple[str, str], player_two_data: tuple[str, s
     """
     collection = await db.get_game_collection()
     player_ids = (player_one_data[0], player_two_data[0])
-    game_state = MarbleGame(player_one_data, player_two_data)
-    game = await collection.insert_one({"player_ids": player_ids, "game_state": game_state})
-    return game.inserted_id
+    game_state = json.dumps(
+        MarbleGame(player_one_data, player_two_data),
+        cls=MarbleGameEncoder,
+    )
+    res = await collection.insert_one({"player_ids": player_ids, "game_state": game_state})
+    return await find(res.inserted_id)
 
 
 # ---- RETRIEVE ----
@@ -119,14 +113,13 @@ async def find(game_id: str, collection=Depends(get_game_collection)) -> GameMod
     :return: an awaitable resolving to the matching document, or None if one is not found
     """
     collection = await db.get_game_collection()
-    return await collection.find_one({"_id": game_id})
+    return await collection.find_one({"_id": PydanticObjectID(game_id)})
 
 
 # ---- UPDATE ----
 async def update_game_state(
         game_id: str,
         new_game_state: MarbleGameModel,
-        collection=Depends(get_game_collection)
 ) -> GameModel:
     """
     Updates the specified game's state.
@@ -138,7 +131,7 @@ async def update_game_state(
     collection = await db.get_game_collection()
     new_game_state = json.dumps(new_game_state, cls=MarbleGameEncoder)
     updated_game = await collection.find_one_and_update(
-        {"_id": game_id},
+        {"_id": PydanticObjectID(game_id)},
         {"$set": {"game_state": new_game_state}},
         return_document=ReturnDocument.AFTER,
     )
@@ -154,5 +147,5 @@ async def delete(game_id: str) -> int:
     :return: an awaitable resolving to the number of deleted documents
     """
     collection = await db.get_game_collection()
-    deleted = await collection.delete_one({"_id": game_id})
+    deleted = await collection.delete_one({"_id": PydanticObjectID(game_id)})
     return deleted.deleted_count

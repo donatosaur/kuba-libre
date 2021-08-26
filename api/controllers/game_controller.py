@@ -1,12 +1,17 @@
 # Modified:    2021-08-23
 # Description: Implements a controller for /game
 #
+import json
 from pydantic import BaseModel, Field
 from httpx import AsyncClient
 from fastapi import APIRouter, Path, HTTPException, status
-from fastapi.responses import JSONResponse
+from marble_game.marble_game import MarbleGameEncoder, MarbleGameDecoder
 from ..models import game_model, move_model
+from .responses import CustomJSONResponse as JSONResponse
 from . import ID_REGEX, GAME_ID_DESC, PLAYER_ID_DESC, OBJ_ID_FIELD_DESC
+
+PLAYER_API_URI = "http://localhost:3000/player/"
+
 
 router = APIRouter()
 
@@ -43,8 +48,8 @@ async def create_game(game_input: GameInput) -> JSONResponse:
 
     # check whether the player ids are valid and unique
     async with AsyncClient() as client:
-        urls = (f"localhost/player/{p1_id}", f"localhost/player/{p2_id}")
-        requests = (await client.get(url) for url in urls)
+        urls = (f"{PLAYER_API_URI}{p1_id}", f"{PLAYER_API_URI}{p2_id}")
+        requests = [await client.get(url) for url in urls]
         responses = map(lambda r: r.status_code != 200, requests)
     if p1_id == p2_id or any(responses):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=INVALID_PARAMS_MESSAGE)
@@ -78,15 +83,15 @@ async def make_move(game_id: str, move: move_model.MoveInput) -> JSONResponse:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Game with id={game_id} not found")
 
     # validate the player ID
-    if move.player_id not in retrieved.player_ids:
+    if move.player_id not in retrieved.get("player_ids"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Player with id={move.player_id} not found in game with id={game_id}"
         )
 
     # parse the game, make the move, and check the game state
-    game = retrieved.game_state
-    move_successful = game.make_move(move.player_id, (move.row_coord, move.col_coord), move.direction.lower())
+    game = json.loads(retrieved.get("game_state"), cls=MarbleGameDecoder)
+    move_successful = game.make_move(move.player_id, (move.row_coord, move.col_coord), move.direction.upper())
     game_complete = game.winner is not None
 
     # update the game and player resources if applicable
@@ -94,8 +99,8 @@ async def make_move(game_id: str, move: move_model.MoveInput) -> JSONResponse:
         await game_model.update_game_state(game_id, game)
     if game_complete:
         async with AsyncClient() as client:
-            for player_id in retrieved.player_ids:
-                await client.patch(f"localhost/players/{player_id}/current-games/{game_id}/complete")
+            for player_id in retrieved.get("player_ids"):
+                await client.patch(f"localhost:3000/players/{player_id}/current-games/{game_id}/complete")
 
     res = {
         "move_successful": move_successful,

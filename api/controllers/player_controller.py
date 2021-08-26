@@ -3,8 +3,8 @@
 #
 from pydantic import Field, BaseModel
 from fastapi import APIRouter, Path, Body, HTTPException, status
-from fastapi.responses import JSONResponse
 from ..models import player_model
+from .responses import CustomJSONResponse as JSONResponse
 from . import ID_REGEX, PLAYER_ID_DESC, GAME_ID_DESC
 
 router = APIRouter()

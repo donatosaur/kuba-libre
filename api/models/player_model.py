@@ -42,7 +42,12 @@ async def create(username: str, name: str) -> dict:
     :return: an awaitable resolving to the id of the inserted document
     """
     collection = await db.get_player_collection()
-    res = await collection.insert_one({"username": username, "name": name})
+    res = await collection.insert_one({
+        "username": username,
+        "name": name,
+        "current_games": [],
+        "completed_games": [],
+    })
     return await find(res.inserted_id)
 
 
@@ -55,7 +60,7 @@ async def find(player_id: str) -> dict:
     :return: an awaitable resolving to the matching document, or None if one is not found
     """
     collection = await db.get_player_collection()
-    return await collection.find_one({"_id": player_id})
+    return await collection.find_one({"_id": PydanticObjectID(player_id)})
 
 
 # ---- UPDATE ----
@@ -69,7 +74,7 @@ async def update_name(player_id: str, new_name: str) -> dict:
     """
     collection = await db.get_player_collection()
     updated_player = await collection.find_one_and_update(
-        {"_id": player_id},
+        {"_id": PydanticObjectID(player_id)},
         {"$set": {"name": new_name}},
         return_document=ReturnDocument.AFTER,
     )
@@ -86,7 +91,7 @@ async def add_current_game(player_id: str, game_id: str) -> dict:
     """
     collection = await db.get_player_collection()
     updated_player = await collection.find_one_and_update(
-        {"_id": player_id},
+        {"_id": PydanticObjectID(player_id)},
         {"$push": {"current_games": game_id}},
         return_document=ReturnDocument.AFTER,
     )
@@ -103,7 +108,7 @@ async def remove_current_game(player_id: str, game_id: str) -> dict:
     """
     collection = await db.get_player_collection()
     updated_player = await collection.find_one_and_update(
-        {"_id": player_id},
+        {"_id": PydanticObjectID(player_id)},
         {"$pull": {"current_games": game_id}},
         return_document=ReturnDocument.AFTER,
     )
@@ -120,8 +125,8 @@ async def add_completed_game(player_id: str, game_id: str) -> dict:
     """
     collection = await db.get_player_collection()
     updated_player = await collection.find_one_and_update(
-        {"_id": player_id},
-        {"$push": {"completed_games": game_id}},
+        {"_id": PydanticObjectID(player_id)},
+        {"$push": {"completed_games": PydanticObjectID(game_id)}},
         return_document=ReturnDocument.AFTER,
     )
     return updated_player
@@ -138,8 +143,8 @@ async def remove_completed_game(player_id: str, game_id: str) -> dict:
     """
     collection = await db.get_player_collection()
     updated_player = await collection.find_one_and_update(
-        {"_id": player_id},
-        {"$pull": {"completed_games": game_id}},
+        {"_id": PydanticObjectID(player_id)},
+        {"$pull": {"completed_games": PydanticObjectID(game_id)}},
         return_document=ReturnDocument.AFTER,
     )
     return updated_player
@@ -156,8 +161,8 @@ async def move_current_game_to_completed(player_id: str, game_id: str) -> dict:
     """
     collection = await db.get_player_collection()
     updated_player = await collection.find_one_and_update(
-        {"_id": player_id},
-        {"$pull": {"current_games": game_id}, "push": {"completed_games": game_id}},
+        {"_id": PydanticObjectID(player_id)},
+        {"$pull": {"current_games": PydanticObjectID(game_id)}, "push": {"completed_games": PydanticObjectID(game_id)}},
         return_document=ReturnDocument.AFTER,
     )
     return updated_player
@@ -172,5 +177,5 @@ async def delete(player_id: str) -> int:
     :return: an awaitable resolving to the number of deleted documents
     """
     collection = await db.get_player_collection()
-    deleted = await collection.delete_one({"_id": player_id})
+    deleted = await collection.delete_one({"_id": PydanticObjectID(player_id)})
     return deleted.deleted_count
