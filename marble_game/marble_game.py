@@ -14,13 +14,13 @@
 #
 # All trademarks and copyrights are the property of their respective owners.
 #
-# Modified:    2021-08-22
+# Modified:    2021-09-09
 # Description: Contains backend logic for the marble game and provides an interface for the game. Responsible for:
 #              turn tracking, score tracking, making (valid) moves and determining win conditions.
 #
-from .game_board import GameBoard, GameBoardEncoder, GameBoardDecoder
-from typing import Optional
 import json
+from typing import Optional, Generator
+from .game_board import GameBoard, GameBoardEncoder, GameBoardDecoder
 
 
 class MarbleGame:
@@ -115,7 +115,7 @@ class MarbleGame:
         return self._current_turn
 
     @property
-    def players(self) -> set[str]:
+    def player_ids(self) -> set[str]:
         """A set containing the players' ids"""
         return set(self._players.keys())
 
@@ -130,82 +130,62 @@ class MarbleGame:
         return self._game_board.marble_count
 
     def get_player_color(self, player_id: str) -> Optional[str]:
-        """
-        Returns the color of the specified player's marbles, or None if the player doesn't exist
-
-        :param player_id: the player's id
-        """
+        """Returns the color of the specified player's marbles, or None if no such player exists"""
         try:
             return self._players[player_id]["color"]
         except KeyError:
             return None
 
     def get_captured(self, player_id: str) -> Optional[int]:
-        """
-        Returns the number of red marbles captured by the specified player, or None if the player doesn't exist
-
-        :param player_id: the player's id
-        """
+        """Returns the number of red marbles captured by the specified player, or none if no such player exists"""
         try:
             return self._players[player_id]["red_marbles_captured"]
         except KeyError:
             return None
 
-    def get_marble(self, coordinates: tuple[int, int]) -> str:
+    def get_opponent_captured(self, player_id: str) -> Optional[int]:
+        """Returns the number of opponent marbles captured by the specified player, or None if no such player exists"""
+        try:
+            return self._players[player_id]["opponent_marbles_captured"]
+        except KeyError:
+            return None
+
+    def get_marble(self, coordinates: tuple[int, int]) -> Optional[str]:
         """
-        Returns the marble ('W', 'B', 'R') in the specified cell, or 'X' if there is no marble in the cell
+        Returns the marble ('W', 'B', 'R') in the specified cell, or None if there is no marble in the cell
 
         :param coordinates: (row, column) coordinates of the cell
         """
         # we can just just call the game board's method for this
-        if self._game_board.is_empty_position(coordinates):
-            return 'X'
         return self._game_board.get_contents_at_position(coordinates)
 
-    def is_player_out_of_moves(self, player_name: str) -> bool:
-        """
-        Returns True if the specified player is out of possible moves. Otherwise, returns False.
-
-        :param player_name: the name of the player to be checked
-        """
-        player_color = self.get_player_color(player_name)
-        marble_coordinates = set()  # the coordinates should be unique
-
-        # find the coordinates of all the player's marbles
+    def generate_possible_moves(self, player_id: str) -> Generator[tuple[tuple[int, int], str], None, None]:
+        """Generates all the possible moves that may be made by the specified player in the board's current state"""
+        player_color = self.get_player_color(player_id)
         for coordinate in self._game_board.generate_all_row_and_column_combinations():
             if self._game_board.get_contents_at_position(coordinate) == player_color:
-                marble_coordinates.add(coordinate)
+                # unpack the coordinates and check whether the adjacent squares are empty (or represent an edge)
+                row_index, column_index = coordinate
 
-        # if the player is out of marbles, then they have no moves left
-        if len(marble_coordinates) == 0:
-            return True
-        # if each of the player's marbles is boxed in, then they have no moves left
-        else:
-            # check whether each position adjacent to one of the player's marbles can be moved (occupies the edge of
-            # the board on a row or column that isn't full, or is adjacent to an empty square)
-            for coordinates in marble_coordinates:
-                row_index, column_index = coordinates
-                # if the position occupies a column edge (it's on row 0 or 6), check whether the row is full
-                if row_index == 0 or row_index == 6:
-                    # a marble can be pushed forward or backward
-                    return False
-                elif column_index == 0 or column_index == 6:
-                    # a marble can be pushed left or right
-                    return False
-                else:
-                    adjacent_squares = (
-                        (row_index - 1, column_index),
-                        (row_index + 1, column_index),
-                        (row_index, column_index - 1),
-                        (row_index, column_index + 1)
-                    )
-                    # if any of the adjacent squares are empty, then a marble can be pushed in some direction
-                    for adjacent_coordinates in adjacent_squares:
-                        if self._game_board.is_empty_position(adjacent_coordinates):
-                            return False
+                adjacent_squares = (               # adjacent squares, in order: above, below, left, right
+                    (row_index - 1, column_index),
+                    (row_index + 1, column_index),
+                    (row_index, column_index - 1),
+                    (row_index, column_index + 1)
+                )
+                directions = ('B', 'F', 'R', 'L')   # opposite moves, in order: backward, forward, right, left
 
-        # if we get here, then the player has no more moves remaining
-        return True
+                for adjacent_coordinate, direction in zip(adjacent_squares, directions):
+                    # only valid coordinates are generated; if the square is now invalid, the original was on an edge
+                    square_along_edge = -1 in adjacent_coordinate or 7 in adjacent_coordinate
+                    if not square_along_edge and not self._game_board.is_empty_position(adjacent_coordinate):
+                        continue
+                    if self._game_board.simulate_move(coordinate, direction) not in {"previous", player_color}:
+                        yield coordinate, direction
+
+    def is_player_out_of_moves(self, player_id: str) -> bool:
+        """Returns True if the specified player is out of possible moves, otherwise False."""
+        return next(self.generate_possible_moves(player_id), None) is None
 
     def is_move_valid(self, player_id: str, coordinates: tuple[int, int], direction: str) -> bool:
         """
@@ -219,23 +199,18 @@ class MarbleGame:
         :param coordinates: (row, column) coordinates of the cell
         :param direction: the direction to move the marble in the specified cell
         """
-        # if the game is over, then the move is invalid
-        if self.winner is not None:
+        # validate game state and input
+        prerequisites = (
+            self.winner is None,                                # the game must not be over
+            player_id in self.player_ids,                       # the player must exist
+            direction in {'L', 'R', 'F', 'B'},                  # the direction must be valid
+            self._current_turn in {None, player_id},            # the player must be able to make a move
+            self._game_board.is_valid_square(coordinates),      # the square must exist
+        )
+        if not all(prerequisites):
             return False
 
-        # if the input is invalid (the player/direction/coordinates don't exist), then the move is invalid
-        if player_id not in self._players:
-            return False
-        if direction not in {'L', 'R', 'F', 'B'}:
-            return False
-        if not self._game_board.is_valid_square(coordinates):
-            return False
-
-        # if it's not the current player's turn, the move is invalid (unless no one's gone yet)
-        if self._current_turn is not None and player_id != self._current_turn:
-            return False
-
-        # get the coordinates of the square opposite the current one and determine whether it's empty or an edge
+        # check whether the square opposite the direction of movement is empty or an edge
         row_index, column_index = coordinates
         if direction == 'L':
             column_index += 1  # pushing left => square one column to the right should be empty or an edge
@@ -245,10 +220,10 @@ class MarbleGame:
             row_index += 1     # pushing up => square one row below should be empty or an edge
         else:
             row_index -= 1     # pushing down => square one row above should be empty or an edge
-        new_coordinates = (row_index, column_index)
+        adjacent_coordinates = row_index, column_index
         # if the original square exists but the previous one doesn't, then the original square must occupy an edge
-        square_is_not_along_edge = self._game_board.is_valid_square(new_coordinates)
-        if square_is_not_along_edge and self.get_marble(new_coordinates) != 'X':
+        square_is_not_along_edge = self._game_board.is_valid_square(adjacent_coordinates)
+        if square_is_not_along_edge and self.get_marble(adjacent_coordinates) is not None:
             return False
 
         # at this point, the game is still ongoing, it's the current player's turn, and the move is physically possible
@@ -312,9 +287,8 @@ class MarbleGame:
                 self._winner = player_id
 
         # get the opponent's id
-        ids = self.players
+        ids = self.player_ids
         ids.remove(player_id)
-        # assert len(names) == 1  # debugging
         opponent = ids.pop()  # there should only be one element in the set so we can just use pop()
 
         # swap the current player
@@ -370,4 +344,3 @@ class MarbleGameDecoder(json.JSONDecoder):
             )
         # pass it to deserialize JSON dict to MarbleGame
         super().__init__(object_hook=hook)
-

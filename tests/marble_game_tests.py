@@ -7,7 +7,7 @@ from marble_game import MarbleGame
 class TestGame(MarbleGame):
     """Extends the MarbleGame class so that the board can be directly accessed for debugging"""
 
-    def __init__(self, player_one_data: tuple[str, str, str], player_two_data: tuple[str, str, str]):
+    def __init__(self, player_one_data: tuple[str, str], player_two_data: tuple[str, str]):
         """Calls MarbleGame's init method with the specified player data."""
         super().__init__(player_one_data, player_two_data)
 
@@ -35,8 +35,8 @@ class GameTester(unittest.TestCase):
         self._player_b = "Player B ID"
         self._player_w = "Player W ID"
 
-        player_b_info = (self._player_b, "Player B", 'B')
-        player_w_info = (self._player_w, "Player W", 'W')
+        player_b_info = (self._player_b, 'B')
+        player_w_info = (self._player_w, 'W')
 
         self._test_game = TestGame(player_b_info, player_w_info)
 
@@ -85,8 +85,8 @@ class GameTester(unittest.TestCase):
         Tests whether any player is allowed to go first
         """
         # create two new games, then have each player try to make a legal move first
-        player_b_info = (self._player_b, "Player B", 'B')
-        player_w_info = (self._player_w, "Player W", 'W')
+        player_b_info = (self._player_b, 'B')
+        player_w_info = (self._player_w, 'W')
 
         game_1 = MarbleGame(player_b_info, player_w_info)
         game_2 = MarbleGame(player_b_info, player_w_info)
@@ -131,7 +131,7 @@ class GameTester(unittest.TestCase):
         self.assertEqual(self._test_game.get_marble((0, 0)), 'W')
         self.assertEqual(self._test_game.get_marble((0, 6)), 'B')
         self.assertEqual(self._test_game.get_marble((3, 2)), 'R')
-        self.assertEqual(self._test_game.get_marble((0, 2)), 'X')
+        self.assertIsNone(self._test_game.get_marble((0, 2)))
 
     def test_is_player_out_of_moves(self):
         """
@@ -430,7 +430,7 @@ class GameTester(unittest.TestCase):
             self.assertEqual(self._test_game.current_turn, self._player_w)
             self.assertIsNone(self._test_game.winner)
             self.assertTupleEqual(self._test_game.marble_count, (8, 8, 13))
-            self.assertEqual(self._test_game.get_marble((0, 5)), 'X')
+            self.assertIsNone(self._test_game.get_marble((0, 5)))
             self.assertEqual(self._test_game.get_marble((1, 5)), 'B')
             self.assertEqual(self._test_game.get_marble((2, 5)), 'B')
             self.assertEqual(self._test_game.get_marble((3, 5)), 'R')
@@ -440,7 +440,7 @@ class GameTester(unittest.TestCase):
             self.assertEqual(self._test_game.current_turn, self._player_w)
             self.assertIsNone(self._test_game.winner)
             self.assertTupleEqual(self._test_game.marble_count, (8, 8, 13))
-            self.assertEqual(self._test_game.get_marble((0, 5)), 'X')
+            self.assertIsNone(self._test_game.get_marble((0, 5)))
             self.assertEqual(self._test_game.get_marble((1, 5)), 'B')
             self.assertEqual(self._test_game.get_marble((2, 5)), 'B')
             self.assertEqual(self._test_game.get_marble((3, 5)), 'R')

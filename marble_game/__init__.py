@@ -16,3 +16,4 @@
 #
 
 from .marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
+from .ai import make_move_ai
