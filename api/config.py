@@ -16,6 +16,9 @@ class _Settings(BaseSettings):
     DB_NAME: str
     PLAYER_COLLECTION_NAME: str
     GAME_COLLECTION_NAME: str
+    SECRET_KEY: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     class Config:
         env_file = ".env"

@@ -1,16 +1,16 @@
-# Modified:    2021-08-25
-# Description: Define JSON encoder for JSON responses
+# Modified:    2021-08-26
+# Description: Define custom JSON encoder for JSON responses
 #
 import json
 from bson import ObjectId
 from typing import Any
 from fastapi.responses import JSONResponse
 from marble_game import MarbleGame, MarbleGameEncoder
-from ..models.pydantic_object_id import PydanticObjectID
+from api.models.pydantic_object_id import PydanticObjectID
 
 
 class CustomJSONResponse(JSONResponse):
-    """Wraps JSONResponse so that custom objects are encoded correctly"""
+    """Extends JSONResponse so that custom objects are encoded correctly"""
 
     # override the default json encoder
     def render(self, content: Any) -> bytes:
