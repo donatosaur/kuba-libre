@@ -4,3 +4,4 @@ export * from './ProtectedRoute';
 export * from './SiteHeader';
 export * from './SiteFooter';
 export * from './SwipeableTabs';
+export * from './GameBoard';

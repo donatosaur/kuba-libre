@@ -56,7 +56,7 @@ export function SwipeableTabs({ tabLabels, tabChildren }: SwipeableTabProps) {
   }
 
   return (
-    <Box sx={{ bgcolor: 'background.paper', width: 500 }}>
+    <Box sx={{ bgcolor: 'background.paper', width: 'auto', zIndex: (theme) => theme.zIndex.drawer }}>
       <AppBar position="static">
         <Tabs
           value={value}
