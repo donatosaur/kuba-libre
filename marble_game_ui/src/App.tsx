@@ -1,31 +1,31 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-// page and component imports
-import logo from './logo.svg';
-// import HomePage from './pages/HomePage'
+import React from 'react';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 
-// import pages and router
+import { Error, ProtectedRoute, Loading, SiteHeader, SiteFooter } from './components';
+import { ErrorPage, HomePage, GamePage, ProfilePage } from './pages';
 
+export default function App() {
+  const { isLoading, error } = useAuth0();
 
-function App() {
-
+  if (isLoading) {
+    return <Loading />;
+  }
 
   return (
-    <div className="App">
-      <Router>
-        <header className='App-header'>
-          <Route path="/" exact>
-            {/*<HomePage/>*/}
+    <Router>
+        <SiteHeader drawerWidth={220} headerText={'Marble Game Website Header Placeholder'}/>
 
-          </Route>
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-        </header>
-     </Router>
-    </div>
+        {error && <Error message={error.message} />}
+
+        <Switch>
+          <Route exact path="/" component={HomePage} />
+          <ProtectedRoute exact path="/games/" component={GamePage} />
+          <ProtectedRoute exact path="/profile/" component={ProfilePage} />
+          <Route path="*" component={ErrorPage}/>
+        </Switch>
+
+        <SiteFooter />
+    </Router>
   );
 }
-
-export default App;

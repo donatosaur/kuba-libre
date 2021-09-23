@@ -7,18 +7,14 @@ export type GameState = {
         'previous_state': string,
     },
     'players': {
-        playerOneID: {
+        [key: string]: {
             'color': 'B' | 'W',
             'red_marbles_captured': number,
-            'opponent_marbles_captured': number
-        },
-        playerTwoID: {
-            'color': 'B' | 'W',
-            'red_marbles_captured': number,
-            'opponent_marbles_captured': number
-        },
-        'current_turn': string;
-    }
+            'opponent_marbles_captured': number,
+        }
+    },
+    'current_turn': string,
+    'winner': string,
 }
 
 export type ErrorResponse = {
@@ -34,7 +30,7 @@ export type MoveResponse = {
 }
 
 export type GameResponse = {
-    'id': string,
+    '_id': string,
     'player_ids': Array<string>,
     'game_state': GameState,
     'versus_ai': boolean,
@@ -42,7 +38,7 @@ export type GameResponse = {
 }
 
 export type PlayerResponse = {
-    'id': string,
+    '_id': string,
     'current_games': Array<string>,
     'completed_games': Array<string>,
 }

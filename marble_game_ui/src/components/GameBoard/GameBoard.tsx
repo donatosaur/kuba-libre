@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
 import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
+import {Typography} from '@mui/material';
 import { AlertColor } from '@mui/material/Alert';
 
 import { Marble } from './Marble';
 import { MessageStack } from './MessageStack';
-import { parseGridString, callAPI, isErrorResponse } from '../../utils';
+import { parseGridString, callAPI, isErrorResponse, GameState } from '../../utils';
+
 
 // define radius of each marble
 const marbleSize = 50;
@@ -16,20 +19,44 @@ type GameBoardProps = {
   gameID: string;
 }
 
+type ScoreBoard = {
+  playerMarbleColor: string;
+  playerRedCaptured: number;
+  opponentRedCaptured: number;
+}
+
 export function GameBoard({ playerID, gameID }: GameBoardProps) {
   const [alert, setAlert] = useState<{severity: AlertColor; message: string} | null>(null);
   const [sourceCoords, setSourceCoords] = useState<number[] | null>(null);
   const [boardState, setBoardState] = useState<string>(' '.repeat(49));
+  const [scoreBoard, setScoreBoard] = useState<ScoreBoard | null>(null);
   const [turnTracker, setTurnTracker] = useState(0);
   
 
   // get the board state on page load and on every new turn
   useEffect(() => {
     const abortController = new AbortController();
-    void async function getGameString() {
+    void async function getGameData() {
       try {
-        const game = await callAPI.getGame(gameID);
-        setBoardState(game.game_state.board.grid);
+        const gameData = await callAPI.getGame(gameID);
+        setBoardState(gameData.game_state.board.grid);
+
+        // get data for the score board
+        let [marbleColor, playerRed, opponentRed] = ['', 0, 0];
+        for (const id of gameData.player_ids) {
+          if (id === playerID) {
+            marbleColor = gameData['game_state']['players'][id]['color'];
+            playerRed = gameData['game_state']['players'][id]['opponent_marbles_captured'];
+          } else {
+            opponentRed = gameData['game_state']['players'][id]['red_marbles_captured'];
+          }
+        }
+        setScoreBoard({
+          playerMarbleColor: marbleColor === 'B' ? 'Black' : 'White',
+          playerRedCaptured: playerRed,
+          opponentRedCaptured: opponentRed,
+        })
+
       } catch (err) {
         if (isErrorResponse(err)) {
           for (const errorDetail of err.detail) {
@@ -165,6 +192,37 @@ export function GameBoard({ playerID, gameID }: GameBoardProps) {
           })}
 
       </Grid>
+
+      { scoreBoard &&
+        <>
+          <Box
+           sx={{
+              mt: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+           }}
+          >
+            <Typography variant="body2">
+              {`Your marble color: ${scoreBoard.playerMarbleColor}`}
+            </Typography>
+          </Box>
+          <Box
+           sx={{
+              mt: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+           }}
+          >
+            <Typography variant="body2">
+              {`Red marbles captured: ${scoreBoard.playerRedCaptured}–${scoreBoard.opponentRedCaptured}`}
+            </Typography>
+          </Box>
+        </>
+      }
 
       {/* TODO: add effect listener so that multiple alerts are displayed */}
       { alert && <MessageStack {...alert} /> }

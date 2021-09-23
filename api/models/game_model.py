@@ -40,7 +40,7 @@ class MarbleGameModel(BaseModel):
                         },
                 },
                 "current_turn": "c838c7eb1f84086bf3b08e60",
-                "winner": None,
+                "winner": "null",
             }
         }
 
@@ -81,7 +81,7 @@ class GameModel(BaseModel):
                             },
                     },
                     "current_turn": "c838c7eb1f84086bf3b08e60",
-                    "winner": None,
+                    "winner": "null",
                 },
                 "versus_ai": False,
                 "completed": False
