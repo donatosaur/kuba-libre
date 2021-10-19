@@ -1,6 +1,7 @@
-# Modified:    2021-10-18
+# Modified:    2021-10-19
 # Description: Defines the FastAPI app
 #
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,8 @@ from api.config import settings
 # create the app
 app = FastAPI()
 
+# find the absolute path to static_content
+static_content_dir = os.path.dirname(os.path.abspath(__file__)) + "/static_content/"
 
 # attach CORS middleware; current settings are only appropriate for development environments
 origins = [
@@ -29,7 +32,7 @@ app.add_middleware(
 # attach attach API endpoints
 app.include_router(game_controller.router, tags=["game"], prefix="/api/game")
 app.include_router(player_controller.router, tags=["player"], prefix="/api/player")
-app.mount("/", StaticFiles(directory="./static_content/", html=True), name="static")
+app.mount("/", StaticFiles(directory=static_content_dir, html=True), name="static")
 
 
 # open an asynchronous database connection on startup
