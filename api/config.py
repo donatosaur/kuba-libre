@@ -1,4 +1,4 @@
-# Modified:    2021-08-25
+# Modified:    2021-10-18
 # Description: Loads settings from .env file
 
 from pydantic import BaseSettings
@@ -8,7 +8,7 @@ __all__ = ["settings"]
 
 
 class _Settings(BaseSettings):
-    APP_NAME: str = "Marble Game API"
+    APP_NAME: str = "KubaLibre API"
     DEBUG_MODE: bool
     HOST: str
     PORT: int
@@ -16,9 +16,9 @@ class _Settings(BaseSettings):
     DB_NAME: str
     PLAYER_COLLECTION_NAME: str
     GAME_COLLECTION_NAME: str
-    SECRET_KEY: str
-    JWT_ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    SECRET_KEY: str = ''
+    JWT_ALGORITHM: str = ''
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     class Config:
         env_file = ".env"

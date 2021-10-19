@@ -11,7 +11,7 @@ export function ProfilePage() {
         </Typography>
 
         <Typography variant="body1" align="center" gutterBottom>
-          Profile Page Placeholder
+          Placeholder: when implemented, will let users customize their avatar.
         </Typography>
       </Container>
     </>

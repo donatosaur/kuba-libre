@@ -22,7 +22,7 @@ export async function move(
     colCoord: number,
     direction: string
 ): Promise<MoveResponse> {
-    const response = await fetch(`/game/${gameID}/make-move`, {
+    const response = await fetch(`/api/game/${gameID}/make-move`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export async function move(
  * @param gameID the game's 24-hex digit ObjectID
  */
 export async function getGame(gameID: string): Promise<GameResponse> {
-    const response = await fetch(`/game/${gameID}`, {
+    const response = await fetch(`/api/game/${gameID}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ export async function getGame(gameID: string): Promise<GameResponse> {
  * @param playerMarbleColor the player's marble color ('B' or 'W')
  */
 export async function createOnePlayerGame(playerID: string, playerMarbleColor: 'B' | 'W'): Promise<GameResponse> {
-    const response = await fetch(`/game/`, {
+    const response = await fetch(`/api/game/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -104,7 +104,7 @@ export async function createOnePlayerGame(playerID: string, playerMarbleColor: '
  * @param playerID the player's 24-hex digit ObjectID
  */
 export async function getUser(playerID: string): Promise<PlayerResponse> {
-    const response = await fetch(`/player/${playerID}`, {
+    const response = await fetch(`/api/player/${playerID}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ export async function getUser(playerID: string): Promise<PlayerResponse> {
  * @param limit maximum number of games to return with each request
  */
 export async function getUserCurrentGames(playerID: string, skip: number, limit: number): Promise<GameResponse[]> {
-    const response = await fetch(`/player/${playerID}/games/current?skip=${skip}&limit=${limit}`, {
+    const response = await fetch(`/api/player/${playerID}/games/current?skip=${skip}&limit=${limit}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -155,7 +155,7 @@ export async function getUserCurrentGames(playerID: string, skip: number, limit:
  * @param limit maximum number of games to return with each request
  */
 export async function getUserCompletedGames(playerID: string, skip: number, limit:number): Promise<GameResponse[]> {
-    const response = await fetch(`/player/${playerID}/games/completed?skip=${skip}&limit=${limit}`, {
+    const response = await fetch(`/api/player/${playerID}/games/completed?skip=${skip}&limit=${limit}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

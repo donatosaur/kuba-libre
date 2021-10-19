@@ -1,6 +1,7 @@
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
+import Link from '@mui/material/Link';
 
 /**
  * Creates a page footer
@@ -26,12 +27,16 @@ export function SiteFooter() {
 
           {/* Copyright */}
           <Typography variant="body1" align="center">
-            Copyright Placeholder
+            {`Source code Ⓒ 2021 Donato Quartuccia. See `}
+            <Link href="https://github.com/donatosaur/marble-game/blob/main/LICENSE">
+              {`license`}
+            </Link>
+            {` for details.`}
           </Typography>
 
           {/* Disclaimer */}
           <Typography variant="body2" color="text.secondary" align="center">
-            This is an unsecure development build. For demonstration and education purposes only.
+            This is an unsecure development build, for demonstration and education only.
           </Typography>
 
         </Container>

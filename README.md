@@ -7,12 +7,33 @@ implemented as a full-stack webapp.
 ### Live Demo
 https://marble-game.herokuapp.com/
 
+### API Specifications
+https://marble-game.herokuapp.com/redoc
+
+### Deployment
+#### Environment Variables
+You must define the following environment variables in `api/.env`:
+* DEBUG_MODE: when True, the uvicorn server will restart when any changes are detected
+* HOST: the server's hostname
+* PORT: the port uvicorn should listen on
+* MONGODB_URI: a URI that connects to your MongoDB cluster/server
+* DB_NAME: the name of the MongoDB database
+* PLAYER_COLLECTION_NAME: the name of the collection to use for player data
+* GAME_COLLECTION_NAME: the name of the collection to be used for game data
+
+You must define the following environment variables in `marble_game_ui/.env`:
+* REACT_APP_DOMAIN: the Auth0 application's domain name
+* REACT_APP_CLIENT_ID: the Auth0 application's client ID
+
+#### Disclaimer
+This source code is only intended as a demonstration. Before attempting to deploy this, make sure you fully consider
+security best practices (CORS, authentication, etc.)
+
 ### Project Structure
 #### api
 Houses the backend API, built with [Uvicorn](https://www.uvicorn.org/), [FastAPI](https://fastapi.tiangolo.com/), [Pydantic](https://pydantic-docs.helpmanual.io/),
 MongoDB and [Motor](https://motor.readthedocs.io/en/stable/). This implements the model and controller and allows game states
-to be saved into a database for future retrieval. As is, the code is intended to be used only for demonstration; if you
-wanted to deploy this, you would need to consider security best practices (CORS, authentication, etc.)
+to be stored and retrieved from a MongoDB database.
 ##### marble_game
 Houses the game logic, including a decision-making AI. This is all you need to actually play the game.
 #### marble_game_ui

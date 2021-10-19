@@ -14,7 +14,7 @@ export default function App() {
 
   return (
     <Router>
-        <SiteHeader drawerWidth={220} headerText={'Marble Game Website Header Placeholder'}/>
+        <SiteHeader drawerWidth={220} headerText={'KubaLibre'}/>
 
         {error && <Error message={error.message} />}
 

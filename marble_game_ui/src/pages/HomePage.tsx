@@ -10,8 +10,9 @@ export function HomePage() {
           Welcome!
         </Typography>
 
-        <Typography variant="body1" align="center" gutterBottom>
-          Welcome Text Placeholder
+        <Typography variant="body1" align="left" gutterBottom>
+          This is a live demo site for KubaLibre. To get started, simply use the login
+          button above to log in or create an account.
         </Typography>
       </Container>
     </>

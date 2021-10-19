@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
-import {Typography} from '@mui/material';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
 import { AlertColor } from '@mui/material/Alert';
 
 import { Marble } from './Marble';
 import { MessageStack } from './MessageStack';
-import { parseGridString, callAPI, isErrorResponse, GameState } from '../../utils';
-
+import { parseGridString, callAPI, isErrorResponse } from '../../utils';
 
 // define radius of each marble
 const marbleSize = 50;
@@ -31,7 +31,6 @@ export function GameBoard({ playerID, gameID }: GameBoardProps) {
   const [boardState, setBoardState] = useState<string>(' '.repeat(49));
   const [scoreBoard, setScoreBoard] = useState<ScoreBoard | null>(null);
   const [turnTracker, setTurnTracker] = useState(0);
-  
 
   // get the board state on page load and on every new turn
   useEffect(() => {
@@ -46,7 +45,7 @@ export function GameBoard({ playerID, gameID }: GameBoardProps) {
         for (const id of gameData.player_ids) {
           if (id === playerID) {
             marbleColor = gameData['game_state']['players'][id]['color'];
-            playerRed = gameData['game_state']['players'][id]['opponent_marbles_captured'];
+            playerRed = gameData['game_state']['players'][id]['red_marbles_captured'];
           } else {
             opponentRed = gameData['game_state']['players'][id]['red_marbles_captured'];
           }
@@ -135,8 +134,8 @@ export function GameBoard({ playerID, gameID }: GameBoardProps) {
       } else {
         // notify the user that the move was successful, and whether there was a winner
         const alertInfo = moveResult.game_complete 
-          ? { severity:'success' as AlertColor, message:'Move successfully recorded. Win state.' }
-          : { severity:'info' as AlertColor, message:'Move successfully recorded.' };
+          ? { severity:'success' as AlertColor, message:'Move successful. The game is over!' }
+          : { severity:'success' as AlertColor, message:'Move successful' };
         setAlert(alertInfo);
         
         // increment the turnTracker to trigger useEffect listener
@@ -171,7 +170,7 @@ export function GameBoard({ playerID, gameID }: GameBoardProps) {
         {/* Map Rows */}
         { gridArray.map((row, i) => {
             return (
-              <Grid container spacing={0}>
+              <Grid container wrap="nowrap" spacing={0}>
 
               {/* Map Cells */}
               { row.map((marbleColor, j) => {
@@ -180,7 +179,15 @@ export function GameBoard({ playerID, gameID }: GameBoardProps) {
                       onPointerDown={(event) => selectSource(event, i, j)}
                       onPointerUp={(event) => selectDestination(event, i, j)}
                     >
-                      <Paper square sx={{p: 0.5, m: 0.1}}>
+                      <Paper
+                        square
+                        sx={{
+                          p: 0.5,
+                          m: 0.1,
+                          '&:hover': {
+                            backgroundColor: 'lightgrey'
+                          }
+                        }}>
                         <Marble color={marbleColor} size={marbleSize} />
                       </Paper>
                     </Grid>
@@ -194,38 +201,50 @@ export function GameBoard({ playerID, gameID }: GameBoardProps) {
       </Grid>
 
       { scoreBoard &&
-        <>
-          <Box
-           sx={{
-              mt: 2,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-           }}
+        <Container
+          maxWidth="xs"
+          sx={{
+            mt: 3,
+            mb: 3,
+          }}
+        >
+          <Paper
+            sx={{
+              border:1
+            }}
           >
-            <Typography variant="body2">
-              {`Your marble color: ${scoreBoard.playerMarbleColor}`}
-            </Typography>
-          </Box>
-          <Box
-           sx={{
-              mt: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-           }}
-          >
-            <Typography variant="body2">
-              {`Red marbles captured: ${scoreBoard.playerRedCaptured}–${scoreBoard.opponentRedCaptured}`}
-            </Typography>
-          </Box>
-        </>
+            <Box
+             sx={{
+                mt: 0.5,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+             }}
+            >
+              <Typography variant="body2">
+                {`Your marble color: ${scoreBoard.playerMarbleColor}`}
+              </Typography>
+            </Box>
+            <Box
+             sx={{
+                mt: 0,
+                mb: 0.5,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+             }}
+            >
+              <Typography variant="body2">
+                {`Red marbles captured: ${scoreBoard.playerRedCaptured}–${scoreBoard.opponentRedCaptured}`}
+              </Typography>
+            </Box>
+          </Paper>
+        </Container>
       }
 
-      {/* TODO: add effect listener so that multiple alerts are displayed */}
-      { alert && <MessageStack {...alert} /> }
+      { alert && <MessageStack {...alert} setAlert={setAlert} /> }
     </>
   );
 }
