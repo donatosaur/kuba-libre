@@ -6,6 +6,7 @@ import Paper from '@mui/material/Paper';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import { AlertColor } from '@mui/material/Alert';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // dialog imports
 import Dialog from '@mui/material/Dialog';
@@ -17,9 +18,6 @@ import Button from '@mui/material/Button';
 import { Marble } from './Marble';
 import { MessageStack } from './MessageStack';
 import { parseGridString, callAPI, isErrorResponse } from '../../utils';
-
-// define radius of each marble
-const marbleSize = 50;
 
 type GameBoardProps = {
   playerID: string;
@@ -34,6 +32,25 @@ type ScoreBoard = {
 }
 
 export function GameBoard({ playerID, gameID, setDisplayGameBoard }: GameBoardProps) {
+  // determine marble size & touch movement sensitivity based on device width
+  let marbleSize: number;
+  let sensitivity: number;
+
+  const minWidth400 = useMediaQuery('(min-width:400px)');
+  const minWidth500 = useMediaQuery('(min-width:500px)');
+  const minHeight400 = useMediaQuery('(min-height:400px)');
+  const minHeight500 = useMediaQuery('(min-height:500px)');
+  if (minWidth500 && minHeight500) {
+    marbleSize = 50;
+    sensitivity = 40;
+  } else if (minWidth400 && minHeight400) {
+    marbleSize = 40;
+    sensitivity = 30;
+  } else {
+    marbleSize = 30;
+    sensitivity = 20;
+  }
+
   /* ------------------------------ State Hooks ------------------------------ */
   // message state hooks
   const [alertMessage, setAlertMessage] = useState<{severity: AlertColor; message: string} | null>(null);
@@ -47,7 +64,6 @@ export function GameBoard({ playerID, gameID, setDisplayGameBoard }: GameBoardPr
   const [boardState, setBoardState] = useState<string>(' '.repeat(49));
   const [scoreBoard, setScoreBoard] = useState<ScoreBoard | null>(null);
   const [turnTracker, setTurnTracker] = useState(0);
-
 
   /* ------------------------------ Effect Hooks ------------------------------ */
   // get the board state on page load and on every new turn
@@ -89,7 +105,7 @@ export function GameBoard({ playerID, gameID, setDisplayGameBoard }: GameBoardPr
     }();
     // prevent memory leaks: abort request if component is no longer mounted
     return () => abortController.abort();
-  }, [turnTracker, gameID]);
+  }, [turnTracker, playerID, gameID]);
 
 
   /* ------------------------------ Event Handlers ------------------------------ */
@@ -138,7 +154,7 @@ export function GameBoard({ playerID, gameID, setDisplayGameBoard }: GameBoardPr
     // check for invalid states (i.e., the marble was moved diagonally)
     const invalid = event.pointerType === 'mouse'
       ? Math.abs(deltaRow) > 0 && Math.abs(deltaCol) > 0
-      : Math.abs(Math.abs(deltaRow) - Math.abs(deltaCol)) < 40
+      : Math.abs(Math.abs(deltaRow) - Math.abs(deltaCol)) < sensitivity
     if (invalid) {
       setAlertMessage({
         severity:'warning', message:'Please swipe vertically or horizontally and at least one square over'
@@ -287,7 +303,11 @@ export function GameBoard({ playerID, gameID, setDisplayGameBoard }: GameBoardPr
               {/* Map Cells */}
               { row.map((marbleColor, j) => {
                  return (
-                   <Grid item
+                   <Grid
+                     item
+                     sx={{
+                       touchAction: 'none' // disable touch to scroll; touch events will still fire
+                     }}
                      onPointerDown={(event) => selectSource(event, i, j)}
                      onPointerUp={(event) => selectDestination(event, i, j)}
                    >

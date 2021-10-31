@@ -1,4 +1,4 @@
-# Modified:    2021-10-19
+# Modified:    2021-10-31
 # Description: Defines the FastAPI app
 #
 import os
@@ -29,10 +29,20 @@ app.add_middleware(
 )
 
 
+class ReactStaticFiles(StaticFiles):
+    """Extends StaticFiles to allow React SPA to handle 404s"""
+    async def get_response(self, path, scope):
+        res = await super().get_response(path, scope)
+        if res.status_code == 404:
+            # funnel 404s back to React App: source https://stackoverflow.com/a/68363904
+            res = await super().get_response('.', scope)
+        return res
+
+
 # attach API endpoints
+app.mount("/", ReactStaticFiles(directory=static_content_dir, html=True), name="static")
 app.include_router(game_controller.router, tags=["game"], prefix="/api/game")
 app.include_router(player_controller.router, tags=["player"], prefix="/api/player")
-app.mount("/", StaticFiles(directory=static_content_dir, html=True), name="static")
 
 
 # open an asynchronous database connection on startup
