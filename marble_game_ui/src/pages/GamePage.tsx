@@ -101,7 +101,7 @@ export function GamePage() {
   const GameTable = (headerData: string[], rowData: GameResponse[]) => {
     return (
       <TableContainer component={Paper}>
-      <Table sx={{ minWidth: 650 }} aria-label="table of user's games">
+      <Table sx={{ minWidth: 200 }} aria-label="table of user's games">
 
         <TableHead>
           <TableRow>
@@ -153,7 +153,6 @@ export function GamePage() {
                 key={gameData._id}
                 // sx={{'&:last-child td, &:last-child th': {border: 0}}}  // disable border on last element
               >
-                <TableCell align="center">{gameData._id}</TableCell>
                 <TableCell align="center">{marbleColor}</TableCell>
                 <TableCell align="center">{currentTurnOrWinner}</TableCell>
                 <TableCell align="center">{score}</TableCell>
@@ -183,7 +182,6 @@ export function GamePage() {
             <TableCell />
             <TableCell />
             <TableCell />
-            <TableCell />
 
             <TableCell align="right">
               <IconButton
@@ -206,8 +204,8 @@ export function GamePage() {
   }
 
   // construct tables to pass to tabs
-  const currentHeaders = ['Game ID', 'Your Marble Color', 'Current Turn', 'Current Score', '']
-  const completedHeaders = ['Game ID', 'Your Marble Color', 'Winner', 'Score', '']
+  const currentHeaders = ['Your Marble Color', 'Turn', 'Score', '']
+  const completedHeaders = ['Your Marble Color', 'Winner', 'Score', '']
   const currentGameTable = GameTable(currentHeaders, currentGames);
   const completedGameTable = GameTable(completedHeaders, completedGames);
 
@@ -235,7 +233,7 @@ export function GamePage() {
                 <ArrowBackIosOutlinedIcon />
                 &nbsp;&nbsp;Return to table
               </IconButton>
-          <GameBoard playerID={playerID} gameID={gameID} />
+          <GameBoard playerID={playerID} gameID={gameID} setDisplayGameBoard={setDisplayGameBoard}/>
         </Container>
       }
     </>

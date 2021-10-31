@@ -29,7 +29,7 @@ app.add_middleware(
 )
 
 
-# attach attach API endpoints
+# attach API endpoints
 app.include_router(game_controller.router, tags=["game"], prefix="/api/game")
 app.include_router(player_controller.router, tags=["player"], prefix="/api/player")
 app.mount("/", StaticFiles(directory=static_content_dir, html=True), name="static")

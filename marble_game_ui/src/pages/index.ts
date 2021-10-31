@@ -1,4 +1,6 @@
 export * from './ErrorPage';
 export * from './HomePage';
 export * from './GamePage';
-export * from './ProfilePage';
+export * from './InstructionsPage';
+export * from './TermsPage';
+export * from './PrivacyPage';

@@ -138,6 +138,8 @@ coverage
 
 # production
 build
+/api/static_content/
+
 
 # misc
 .DS_Store

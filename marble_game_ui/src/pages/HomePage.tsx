@@ -5,7 +5,7 @@ import Container from '@mui/material/Container';
 export function HomePage() {
   return (
     <>
-      <Container component="main" maxWidth="sm">
+      <Container component="main" maxWidth="sm" sx={{mt: '2vh'}}>
         <Typography variant="h3" align="center" gutterBottom>
           Welcome!
         </Typography>

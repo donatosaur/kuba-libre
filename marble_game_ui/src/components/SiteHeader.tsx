@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import { useAuth0 } from "@auth0/auth0-react";
 import useMediaQuery from '@mui/material/useMediaQuery';
 
+// component imports
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import AppBar from '@mui/material/AppBar';
@@ -17,10 +18,12 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider'
+
+// icon imports
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import GridOnOutlinedIcon from '@mui/icons-material/GridOnOutlined';
-import AccountBoxOutlinedIcon from '@mui/icons-material/AccountBoxOutlined';
-import Divider from '@mui/material/Divider'
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 
 type SiteHeaderProps = {
@@ -146,11 +149,11 @@ export function SiteHeader({ drawerWidth, headerText }: SiteHeaderProps) {
         >
           {/* Drawer Menu Items */}
           <List>
-            <ListItem button key="My Profile" onClick={() => history.push('/profile')}>
+            <ListItem button key="Instructions" onClick={() => history.push('/instructions')}>
               <ListItemIcon>
-                 <AccountBoxOutlinedIcon />
+                 <HelpOutlineIcon />
               </ListItemIcon>
-              <ListItemText primary="My Profile" />
+              <ListItemText primary="Instructions" />
             </ListItem>
             <Divider />
             <ListItem button key="Games" onClick={() => history.push('/games')}>
