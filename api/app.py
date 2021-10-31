@@ -40,9 +40,9 @@ class ReactStaticFiles(StaticFiles):
 
 
 # attach API endpoints
-app.mount("/", ReactStaticFiles(directory=static_content_dir, html=True), name="static")
 app.include_router(game_controller.router, tags=["game"], prefix="/api/game")
 app.include_router(player_controller.router, tags=["player"], prefix="/api/player")
+app.mount("/", ReactStaticFiles(directory=static_content_dir, html=True), name="static")
 
 
 # open an asynchronous database connection on startup
