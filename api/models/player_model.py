@@ -4,7 +4,7 @@
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
 from typing import Optional
-from api.db import db
+from db import db
 from .pydantic_object_id import PydanticObjectID
 from . import OBJ_ID_FIELD_DESC
 

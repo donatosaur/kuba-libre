@@ -1,4 +1,4 @@
-# Copyright 2021 Donato Quartuccia
+# Copyright 2021-2022 Donato Quartuccia
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -13,3 +13,7 @@
 #    limitations under the License.
 #
 # All trademarks and copyrights are the property of their respective owners.
+#
+
+from .marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
+from .ai import make_move_ai

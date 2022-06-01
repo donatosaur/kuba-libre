@@ -1,9 +1,9 @@
-# Modified:    2021-08-30
+# Modified:    2022-06-01
 # Description: Defines the database for the app
 #
 import pymongo
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
-from .config import settings
+from config import settings
 
 
 class _MongoDBClient:

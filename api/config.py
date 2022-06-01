@@ -1,4 +1,4 @@
-# Modified:    2021-10-18
+# Modified:    2022-06-01
 # Description: Loads settings from .env file
 
 from pydantic import BaseSettings
@@ -16,9 +16,6 @@ class _Settings(BaseSettings):
     DB_NAME: str
     PLAYER_COLLECTION_NAME: str
     GAME_COLLECTION_NAME: str
-    SECRET_KEY: str = ''
-    JWT_ALGORITHM: str = ''
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     class Config:
         env_file = ".env"

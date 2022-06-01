@@ -1,4 +1,4 @@
-# Modified:    2021-09-21
+# Modified:    2022-06-01
 # Description: Implements a model for game info
 #
 import json
@@ -6,7 +6,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument, CursorType
 from marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
-from api.db import db
+from db import db
 from .pydantic_object_id import PydanticObjectID
 from . import OBJ_ID_FIELD_DESC, COLOR_REGEX, ID_REGEX, PLAYER_ID_DESC, COLOR_FIELD_DESC
 

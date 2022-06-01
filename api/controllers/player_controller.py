@@ -2,7 +2,7 @@
 # Description: Implements a controller for /player
 #
 from fastapi import APIRouter, Path, HTTPException, status, Query
-from api.models import player_model, game_model
+from models import player_model, game_model
 from .responses import CustomJSONResponse as JSONResponse
 from . import ID_REGEX, PLAYER_ID_DESC, SKIP_DESC, LIMIT_DESC
 

@@ -1,4 +1,4 @@
-# Modified:    2021-10-31
+# Modified:    2022-06-01
 # Description: Defines the FastAPI app
 #
 import os
@@ -6,9 +6,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from api.controllers import game_controller, player_controller
-from api.db import db
-from api.config import settings
+from controllers import game_controller, player_controller
+from db import db
+from config import settings
 
 # create the app
 app = FastAPI()

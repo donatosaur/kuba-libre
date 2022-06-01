@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  shared:
+    build: ./marble-game
+    image: shared
+
+  api:
+    image: api
+    build: ./api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - shared

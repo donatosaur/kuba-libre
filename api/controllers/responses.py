@@ -6,7 +6,7 @@ from bson import ObjectId
 from typing import Any
 from fastapi.responses import JSONResponse
 from marble_game import MarbleGame, MarbleGameEncoder
-from api.models.pydantic_object_id import PydanticObjectID
+from models.pydantic_object_id import PydanticObjectID
 
 
 class CustomJSONResponse(JSONResponse):
