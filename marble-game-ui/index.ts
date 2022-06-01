@@ -1,5 +1,5 @@
 /**
- * Copyright 2021 Donato Quartuccia
+ * Copyright 2021-2022 Donato Quartuccia
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
