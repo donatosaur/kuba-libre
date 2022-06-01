@@ -11,6 +11,12 @@ https://marble-game.herokuapp.com/
 https://marble-game.herokuapp.com/redoc
 
 ### Deployment
+#### Build Instructions
+1. Define environment variables
+2. Install `docker`
+3. Run `docker compose build` from the project root directory
+4. Start the docker containers (e.g. `docker compose up`)
+
 #### Environment Variables
 You must define the following environment variables in `api/.env`:
 * DEBUG_MODE: when True, the uvicorn server will restart when any changes are detected
