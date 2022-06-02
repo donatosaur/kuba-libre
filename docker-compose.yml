@@ -1,14 +1,19 @@
-version: "3.9"
-
 services:
   shared:
     build: ./marble-game
     image: shared
-
+  frontend:
+    build: ./marble-game-ui
+    image: frontend
+    volumes:
+      - ./marble-game-ui/node_modules:/code/node_modules:rw
   api:
-    image: api
     build: ./api
+    image: api
     ports:
-      - "3000:3000"
+      - "${FASTAPI_PORT-3000}:${FASTAPI_PORT-3000}"
+    env_file:
+      - .env
     depends_on:
       - shared
+      - frontend

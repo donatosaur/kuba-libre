@@ -18,18 +18,20 @@ https://marble-game.herokuapp.com/redoc
 4. Start the docker containers (e.g. `docker compose up`)
 
 #### Environment Variables
-You must define the following environment variables in `api/.env`:
-* DEBUG_MODE: when True, the uvicorn server will restart when any changes are detected
-* HOST: the server's hostname
-* PORT: the port uvicorn should listen on
-* MONGODB_URI: a URI that connects to your MongoDB cluster/server
-* DB_NAME: the name of the MongoDB database
-* PLAYER_COLLECTION_NAME: the name of the collection to use for player data
-* GAME_COLLECTION_NAME: the name of the collection to be used for game data
-
-You must define the following environment variables in `marble_game_ui/.env`:
+Define the following environment variables in `.env` in the project root directory:
+###### Required
+* FASTAPI_HOST: the server's hostname
+* FASTAPI_PORT: the port uvicorn should listen on
+* FASTAPI_MONGODB_URI: a URI that connects to your MongoDB cluster/server
+* FASTAPI_DB_NAME: the name of the MongoDB database
+* FASTAPI_PLAYER_COLLECTION_NAME: the name of the collection to use for player data
+* FASTAPI_GAME_COLLECTION_NAME: the name of the collection to be used for game data
 * REACT_APP_DOMAIN: the Auth0 application's domain name
 * REACT_APP_CLIENT_ID: the Auth0 application's client ID
+
+###### Optional
+* FASTAPI_DEBUG: set to True to cause the uvicorn server will restart when changes are detected
+* FASTAPI_APP_NAME: set a name to be displayed as the webpage title for the API documentation pages
 
 #### Disclaimer
 This source code is only intended as a demonstration. Before attempting to deploy this, make sure you fully consider

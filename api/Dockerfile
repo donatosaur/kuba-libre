@@ -4,6 +4,11 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 ARG APP_DIR=/app
+ARG STATIC_CONTENT_DIR=/static
+ENV FASTAPI_STATIC_CONTENT_DIR=/static
+
+# copy static content
+COPY --from=frontend ${STATIC_CONTENT_DIR} ${STATIC_CONTENT_DIR}
 
 # copy shared libraries
 COPY --from=shared /shared/marble-game /marble-game
