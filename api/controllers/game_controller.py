@@ -3,7 +3,7 @@
 #
 from typing import Union
 from fastapi import APIRouter, Path, HTTPException, status
-from api.models import game_model, player_model, move_model
+from models import game_model, player_model, move_model
 from marble_game import make_move_ai
 from .responses import CustomJSONResponse as JSONResponse
 from . import ID_REGEX, GAME_ID_DESC, AI_PLAYER_ID

@@ -1,0 +1,24 @@
+[project]
+name = "marble-game"
+version = "1.0.0"
+description = "Game logic for kuba libre, including a decision-making AI"
+requires-python = "~=3.10"
+
+[[project.authors]]
+name = "Donato Quartuccia"
+
+[project.urls]
+project-url = "https://github.com/donatosaur/kuba-libre"
+
+[project.license]
+text = "Apache-2.0"
+
+# look for packages in src subdirectory
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests"]
+
+# build system config
+[build-system]
+requires = ["setuptools >= 51.0.0", "wheel"]
+build-backend = "setuptools.build_meta"

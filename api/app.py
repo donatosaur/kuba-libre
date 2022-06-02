@@ -1,20 +1,16 @@
-# Modified:    2021-10-31
+# Modified:    2022-06-01
 # Description: Defines the FastAPI app
 #
-import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from api.controllers import game_controller, player_controller
-from api.db import db
-from api.config import settings
+from controllers import game_controller, player_controller
+from db import db
+from config import settings
 
 # create the app
 app = FastAPI()
-
-# find the absolute path to static_content
-static_content_dir = os.path.dirname(os.path.abspath(__file__)) + "/static_content/"
 
 # attach CORS middleware; current settings are only appropriate for development environments
 origins = [
@@ -42,7 +38,7 @@ class ReactStaticFiles(StaticFiles):
 # attach API endpoints
 app.include_router(game_controller.router, tags=["game"], prefix="/api/game")
 app.include_router(player_controller.router, tags=["player"], prefix="/api/player")
-app.mount("/", ReactStaticFiles(directory=static_content_dir, html=True), name="static")
+app.mount("/", ReactStaticFiles(directory=settings.STATIC_CONTENT_DIR, html=True), name="static")
 
 
 # open an asynchronous database connection on startup

@@ -2,7 +2,7 @@
 # Description: Contains unit tests for JSON Encoding & Decoding of package objects
 import unittest
 import json
-from marble_game.marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
+from marble_game import MarbleGame, MarbleGameEncoder, MarbleGameDecoder
 from marble_game.game_board import GameBoard, GameBoardEncoder, GameBoardDecoder
 
 
