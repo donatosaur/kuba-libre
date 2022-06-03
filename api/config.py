@@ -1,4 +1,4 @@
-# Modified:    2022-06-01
+# Modified:    2022-06-02
 # Description: Loads settings from environment
 
 from pydantic import BaseSettings
@@ -16,6 +16,7 @@ class _Settings(BaseSettings):
     DB_NAME: str
     PLAYER_COLLECTION_NAME: str
     GAME_COLLECTION_NAME: str
+    STATIC_CONTENT_SRV: bool = True
     STATIC_CONTENT_DIR: str = "/static/"
 
     class Config:

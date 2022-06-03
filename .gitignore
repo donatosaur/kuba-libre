@@ -129,21 +129,15 @@ dmypy.json
 .pyre/
 
 # IDE Files
+.run/
 .idea
 .VSCode*
-
-# node dependencies
-node_modules/
-.pnp
-.pnp.js
 
 # testing
 coverage
 
 # production
 build
-/api/static_content/
-
 
 # misc
 .DS_Store
@@ -151,8 +145,3 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
-
-# logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*

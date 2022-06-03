@@ -1,0 +1,4 @@
+# don't create diffs for these
+/.yarn/releases/** binary
+/.yarn/plugins/**  binary
+yarn.lock binary
