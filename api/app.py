@@ -1,6 +1,7 @@
-# Modified:    2022-06-01
+# Modified:    2022-06-02
 # Description: Defines the FastAPI app
 #
+from pathlib import Path
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,7 +39,8 @@ class ReactStaticFiles(StaticFiles):
 # attach API endpoints
 app.include_router(game_controller.router, tags=["game"], prefix="/api/game")
 app.include_router(player_controller.router, tags=["player"], prefix="/api/player")
-app.mount("/", ReactStaticFiles(directory=settings.STATIC_CONTENT_DIR, html=True), name="static")
+if settings.STATIC_CONTENT_SRV and Path(settings.STATIC_CONTENT_DIR).is_dir():
+    app.mount("/", ReactStaticFiles(directory=settings.STATIC_CONTENT_DIR, html=True), name="static")
 
 
 # open an asynchronous database connection on startup
